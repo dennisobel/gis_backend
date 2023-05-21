@@ -29,7 +29,7 @@ const UserSchema = new mongoose.Schema(
     },
     user_type: {
       type: String,
-      required: true,
+      required: false,
     },
     kra_brs_number: {
       type: String,
@@ -37,8 +37,16 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["governor", "cec", "director", "revenueOfficer", "management"],
-      default: "governor",
+      enum: ["governor", "cec", "director", "revenueOfficer", "management","client"],
+      default: "",
+    },
+    ministry: {
+      type: String,
+      required: false,
+    },
+    county_id: {
+      type: String,
+      required: false,
     },
   },
   {

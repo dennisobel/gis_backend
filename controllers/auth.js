@@ -43,6 +43,8 @@ export const signup = async (req, res) => {
       user_type,
       kra_brs_number,
       role,
+      county_id,
+      ministry
     } = req.body;
 
     // check for existing email
@@ -80,13 +82,15 @@ export const signup = async (req, res) => {
                 user_type,
                 kra_brs_number,
                 role,
+                county_id,
+                ministry
               });
 
               // return save result as a response
               user
                 .save()
                 .then((result) =>
-                  res.status(201).send({ msg: "User Register Successfully" })
+                  res.status(201).send({ msg: "User Register Successfully", result })
                 )
                 .catch((error) => res.status(500).send({ error }));
             })
@@ -134,6 +138,8 @@ export async function login(req, res) {
               user_type,
               kra_brs_number,
               role,
+              county_id,
+              ministry
             } = user;
 
             // create jwt token
@@ -249,7 +255,7 @@ export async function verifyOTP(req, res) {
     req.app.locals.resetSession = true; // start session for reset password
     return res.status(201).send({ msg: "Verify Successsfully!" });
   }
-  return res.status(400).send({ error: "Invalid OTP" });
+  return res.status(400).send({ error: `Invalid OTP`});
 }
 
 // successfully redirect user when OTP is valid
