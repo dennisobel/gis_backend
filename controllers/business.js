@@ -73,11 +73,3 @@ export const deleteBusiness = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete the business.' });
   }
 };
-
-// export default {
-//   createBusiness,
-//   getAllBusinesses,
-//   getBusinessById,
-//   updateBusiness,
-//   deleteBusiness,
-// };
