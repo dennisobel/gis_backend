@@ -4,6 +4,7 @@ import Transaction from "../models/Transaction.js";
 import Ward from "../models/Ward.js";
 
 export const getAdmins = async (req, res) => {
+  console.log(req)
   try {
     const { page = 1, pageSize = 20, sort = null, search = "" } = req.query;
 
@@ -18,12 +19,20 @@ export const getAdmins = async (req, res) => {
     const sortFormatted = Boolean(sort) ? generateSort() : {};
 
     const admins = await User.find({
-       role: "admin" 
+       role: "admin",
+       $or: [
+        { name: { $regex: new RegExp(search, "i") } },
+        { email: { $regex: new RegExp(search, "i") } },
+      ],
     })
-    // .select("-password")
+    .select("-password")
     .sort(sortFormatted)
     .skip(page * pageSize)
     .limit(pageSize);
+
+    const total = await Transaction.countDocuments({
+      name: { $regex: search, $options: "i" },
+    });
     res.status(200).json(admins);
   } catch (error) {
     res.status(404).json({ message: error.message });

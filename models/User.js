@@ -48,10 +48,14 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    block: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Ward',
-      required: false,
+    // block: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: 'Ward',
+    //   required: false,
+    // }
+    ward: {
+      type: String,
+      required: false
     }
   },
   {

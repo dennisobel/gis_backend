@@ -11,6 +11,7 @@ import managementRoutes from "./routes/management.js";
 import salesRoutes from "./routes/sales.js";
 import authRoutes from "./routes/auth.js"
 import businessRoutes from "./routes/business.js"
+import countyRoutes from "./routes/county.js"
 
 // data imports
 import User from "./models/User.js";
@@ -19,6 +20,8 @@ import ProductStat from "./models/ProductStat.js";
 import Transaction from "./models/Transaction.js";
 import OverallStat from "./models/OverallStat.js";
 import AffiliateStat from "./models/AffiliateStat.js";
+import County from "./models/County.js";
+import SubCounty from "./models/SubCounty.js";
 import {
   dataUser,
   dataProduct,
@@ -26,6 +29,7 @@ import {
   dataTransaction,
   dataOverallStat,
   dataAffiliateStat,
+  counties
 } from "./data/index.js";
 import connect from "./database/conn.js";
 
@@ -46,22 +50,37 @@ app.use("/management", managementRoutes);
 app.use("/sales", salesRoutes);
 app.use("/auth", authRoutes)
 app.use("/business", businessRoutes)
+app.use("/county",countyRoutes)
 
 /**MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;
-// mongoose.connect(process.env.MONGO_URL,{
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-// }).then(()=>{
-//     app.listen(PORT, () => console.log(`Server Port: ${PORT}`))
-// ONLY ADD DATA ONE TIME
-// User.insertMany(dataUser)
-// Product.insertMany(dataProduct);
-// ProductStat.insertMany(dataProductStat);
-// Transaction.insertMany(dataTransaction)
-// OverallStat.insertMany(dataOverallStat);
-// AffiliateStat.insertMany(dataAffiliateStat);
-// }).catch(error => console.log(`${error} did not connect`))
+
+// const seedSubcounties = async () => {
+//   try {
+    
+//     const makueniCounty = await County.findOne({ code: "017" }); 
+//     if (!makueniCounty) {
+//       throw new Error("Makueni County not found in the database.");
+//     }
+
+//     const subcountyData = [
+//       { name: "Kilungu", code: "01701", county: makueniCounty._id },
+//       { name: "Mbooni", code: "01702", county: makueniCounty._id },
+//       { name: "Kaiti", code: "01703", county: makueniCounty._id },
+//       { name: "Makueni", code: "01704", county: makueniCounty._id },
+//       { name: "Kibwezi East", code: "01705", county: makueniCounty._id },
+//       { name: "Kibwezi West", code: "01706", county: makueniCounty._id },
+//     ];
+
+//     await SubCounty.deleteMany({}); // Clear existing subcounty data
+//     await SubCounty.insertMany(subcountyData); // Insert new subcounty data
+//     console.log("Subcounty data seeded successfully!");
+//     process.exit(0); // Exit the script
+//   } catch (error) {
+//     console.error("Error seeding subcounty data:", error);
+//     process.exit(1); // Exit with an error
+//   }
+// };
 
 /** start server only when we have valid connection */
 connect()
@@ -71,12 +90,10 @@ connect()
         console.log(`Server connected to http://localhost:${PORT}`);
       });
       // ONLY ADD DATA ONE TIME
-      // User.insertMany(dataUser)
-      // Product.insertMany(dataProduct);
-      // ProductStat.insertMany(dataProductStat);
-      // Transaction.insertMany(dataTransaction)
-      // OverallStat.insertMany(dataOverallStat);
-      // AffiliateStat.insertMany(dataAffiliateStat);
+      // County.insertMany(counties)
+      // .then(() => console.log("counties seeded successfully"))
+      // .catch(e => console.error(e))
+      // seedSubcounties()
     } catch (error) {
       console.log("Cannot connect to the server");
     }

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, {Schema} from "mongoose";
 
 const WardSchema = new mongoose.Schema(
   {
@@ -8,7 +8,10 @@ const WardSchema = new mongoose.Schema(
       min: 2,
       max: 120,
     },
-    
+    code: {
+      type: String
+    },
+    subCounty: { type: Schema.Types.ObjectId, ref: 'SubCounty' },
   },
   {
     timestamps: true,
