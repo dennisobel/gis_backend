@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Transaction from "../models/Transaction.js";
+import Ward from "../models/Ward.js";
 
 export const getAdmins = async (req, res) => {
   try {
@@ -10,6 +11,35 @@ export const getAdmins = async (req, res) => {
     res.status(404).json({ message: error.message });
   }
 };
+
+export const assignWardToOfficer = async (req, res) => {
+  const { ward_id, officer_email } = req.body;
+  try {
+    const ward = await Ward.find({ id: ward_id });
+    if (!ward) {
+      res.status(404).json({ error: "Ward Not Found" });
+    }
+
+    const officer = await User.find({ email: officer_email })
+    if (!officer){res.status(404).json({error: "Officer Not Found"})}
+
+    if (officer.role !== "revenueOfficer") {
+      return res.status(403).json({ error: "Assigned officer must have the role of 'revenueOfficer'" });
+    }
+
+    const allowedRoles = ["governor", "director", "management"];
+    const { role } = req.user;
+    if (!allowedRoles.includes(role)) {
+      return res.status(403).json({ error: "Unauthorized. Only users with roles 'governor', 'director', or 'management' can perform this action." });
+    }
+    
+    officer.block = ward._id;
+    await officer.save();
+
+    await ward.save();
+  } catch (err) {}
+};
+
 
 export const getUserPerformance = async (req, res) => {
   try {
