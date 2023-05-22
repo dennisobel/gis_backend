@@ -48,6 +48,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    block: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Ward',
+      required: false,
+    }
   },
   {
     timestamps: true,
