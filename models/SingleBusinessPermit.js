@@ -27,7 +27,8 @@ const SingleBusinessPermitSchema = new mongoose.Schema({
   contact_person_name: String,
   contact_person_email: String,
   contact_person_phone: String,
-  business_coordinates: String,
+  latitude: String,
+  longitude: String,
   createdAt: {
     type: Date,
     default: Date.now

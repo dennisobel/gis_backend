@@ -16,8 +16,7 @@ export async function verifyUser(req, res, next) {
     if (!exist) return res.status(404).send({ error: "Can't find User!!!" });
     next();
   } catch (error) {
-    console.log("ERROR -> ", error)
-    return res.status(404).send({ error: "Authentication Error" });
+    return res.status(404).send({ error: `Authentication Error, ${error}` });
   }
 }
 
