@@ -4,7 +4,25 @@ import Transaction from "../models/Transaction.js";
 
 export const getAdmins = async (req, res) => {
   try {
-    const admins = await User.find({ role: "admin" }).select("-password");
+    const { page = 1, pageSize = 20, sort = null, search = "" } = req.query;
+
+    const generateSort = () => {
+      const sortParsed = JSON.parse(sort);
+      const sortFormatted = {
+        [sortParsed.field]: (sortParsed.sort = "asc" ? 1 : -1),
+      };
+
+      return sortFormatted;
+    };
+    const sortFormatted = Boolean(sort) ? generateSort() : {};
+
+    const admins = await User.find({
+       role: "admin" 
+    })
+    .select("-password")
+    .sort(sortFormatted)
+    .skip(page * pageSize)
+    .limit(pageSize);
     res.status(200).json(admins);
   } catch (error) {
     res.status(404).json({ message: error.message });
