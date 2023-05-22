@@ -2,6 +2,8 @@ import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
+import OTP from "../models/OTP.js";
+import { sendSms } from "./mailer.js";
 
 /** middleware for verify user */
 export async function verifyUser(req, res, next) {
@@ -237,25 +239,74 @@ export async function updateUser(req, res) {
   }
 }
 
-/** GET: http://localhost:5001/api/generateOTP */
+/** POST: http://localhost:5001/api/generateOTP 
+ * @param : {
+  "msisdn" : "254711111111",
+
+}
+*//**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 export async function generateOTP(req, res) {
   req.app.locals.OTP = await otpGenerator.generate(6, {
     lowerCaseAlphabets: false,
     upperCaseAlphabets: false,
     specialChars: false,
   });
-  res.status(201).send({ code: req.app.locals.OTP });
+
+  const { msisdn } = req.body; 
+  let now = new Date(Date.now())
+  let expiry = new Date(now).setMinutes(now.getMinutes() + 10)
+  const code = req.app.locals.OTP
+  try{
+    const otp = new OTP({msisdn: msisdn, code: code, expiry : expiry })
+    otp.save()
+    await sendSms({msisdn: msisdn, text: `Your OTP is ${code}. The code expires in 10 minutes`})
+    res.status(201).send({ status: 0, message: 'OTP Sent to phone number' });
+  } catch (error) {
+    console.log(error)
+    res.status(501).send({ status: 1, message: "Error sending otp"})
+  }
+  
 }
 
-/** GET: http://localhost:5001/api/verifyOTP */
+/** GET: http://localhost:5001/api/verifyOTP ?msisdn=254711111111&code=xxxxxx*/
 export async function verifyOTP(req, res) {
-  const { code } = req.query;
-  if (parseInt(req.app.locals.OTP) === parseInt(code)) {
-    req.app.locals.OTP = null; // reset the OTP value
-    req.app.locals.resetSession = true; // start session for reset password
-    return res.status(201).send({ msg: "Verify Successsfully!" });
+  const { msisdn, code } = req.query;
+
+  try {
+    const otp = await OTP.findOne({ msisdn }).sort({ createdAt: -1 });
+
+    if (!otp) {
+
+      res.status(400).send({ error: "Invalid OTP" });
+    }
+
+    if (otp.verified){
+      res.status(400).send({ error: "OTP has already been verified" });
+    }
+
+    const currentTimestamp = Date.now(); // Get the current timestamp in seconds
+
+    if (currentTimestamp > otp.expiry) {
+
+      res.status(400).send({ error: "OTP Has Expired" });
+    } else {
+      if (otp.code == code){
+        otp.verified = true; // Mark the OTP as verified
+        await otp.save(); 
+        res.status(201).send({message: "OTP Verified successfully"})
+      } else {
+        res.status(400).send({ error: "Invalid OTP. Use the last OTP received" });
+      }
+      
+    }
+  } catch (error) {
+
+    res.status(400).send({ error: "Unable to verify OTP" });
   }
-  return res.status(400).send({ error: `Invalid OTP`});
 }
 
 // successfully redirect user when OTP is valid
