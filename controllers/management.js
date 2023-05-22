@@ -19,7 +19,7 @@ export const getAdmins = async (req, res) => {
     const admins = await User.find({
        role: "admin" 
     })
-    .select("-password")
+    // .select("-password")
     .sort(sortFormatted)
     .skip(page * pageSize)
     .limit(pageSize);
