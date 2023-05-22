@@ -13,11 +13,11 @@ router.post('/register',signup)
 router.post('/registerMail',registerMail)
 router.post('/authenticate',verifyUser)
 router.post('/login',verifyUser,login)
+router.post('/generateOTP', generateOTP)
 
 /** GET Methods */
 router.get('/user/:email',getUser)
-router.get('/generateOTP',verifyUser, localVariables, generateOTP)
-router.get('/verifyOTP',verifyUser, verifyOTP)
+router.get('/verifyOTP', verifyOTP)
 router.get('/createResetSession',createResetSession)
 
 

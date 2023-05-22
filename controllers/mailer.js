@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import Mailgen from 'mailgen';
 
-
+import axios from 'axios';
 
 // https://ethereal.email/create
 let nodeConfig = {
@@ -59,5 +59,37 @@ export const registerMail = async (req, res) => {
             return res.status(200).send({ msg: "You should receive an email from us."})
         })
         .catch(error => res.status(500).send({ error }))
+
+}
+
+export const sendSms = async (msisdn, text) => {
+    console.log("Text", text)
+    console.log("msisdn", msisdn)
+
+    const url = process.env.SMS_URL;
+
+    // Define the JSON payload for the SMS message.
+    const payload = JSON.stringify({
+        MessageParameters: [
+            {
+                Text: msisdn.text,
+                Number: msisdn.msisdn
+            }
+        ],
+        ApiKey: process.env.SMS_API_KEY,
+        SenderId: process.env.SMS_SENDER_ID,
+        ClientId: process.env.SMS_CLIENT_ID
+    });
+
+    // Send the SMS message.
+    console.log(`---REQUEST----\n${url} -> ${JSON.stringify(payload)}`);
+    try {
+    const response = await axios.post(url, payload);
+        console.log("---RESPONSE---");
+        console.log(response.data);
+    } catch (error) {
+        console.error("---ERROR---");
+        console.error(error.response.data);
+    }
 
 }
