@@ -9,7 +9,6 @@ import { sendSms } from "./mailer.js";
 export async function verifyUser(req, res, next) {
   try {
     const { email } = req.method == "GET" ? req.query : req.body;
-    console.log("email", email);
 
     // check the user existance
     let exist = await User.findOne({ email });
@@ -250,11 +249,12 @@ export async function updateUser(req, res) {
  * @param {*} res 
  */
 export async function generateOTP(req, res) {
+  console.log("REQ:",req.body)
   req.app.locals.OTP = await otpGenerator.generate(6, {
     lowerCaseAlphabets: false,
     upperCaseAlphabets: false,
     specialChars: false,
-  });
+  });  
 
   const { msisdn } = req.body; 
   let now = new Date(Date.now())
