@@ -154,6 +154,8 @@ export async function login(req, res) {
                 user_type,
                 kra_brs_number,
                 role,
+                county_id,
+                ministry
               },
               process.env.JWT_SECRET,
               { expiresIn: "24h" }
@@ -180,7 +182,6 @@ export async function login(req, res) {
 /** GET: http://localhost:5001/api/user/example123 */
 export async function getUser(req, res) {
   const { email } = req.params;
-  console.log(email);
 
   try {
     if (!email) return res.status(501).send({ error: "Invalid email" });
@@ -201,6 +202,25 @@ export async function getUser(req, res) {
   }
 }
 
+/** GET: http://localhost:5001/api/users */
+export async function getUsers(req, res) {
+  try {
+    User.find({}, function (err, users) {
+      if (err) return res.status(500).send({ err });
+      if (!users)
+        return res.status(501).send({ error: "Couldn't Find the Users" });
+
+      /** remove password from user */
+      // mongoose return unnecessary data with object so convert it into json
+      // const { password, ...rest } = Object.assign({}, users.toJSON());
+
+      return res.status(201).send(users);
+    });
+  } catch (error) {
+    return res.status(404).send({ error: `Cannot Find Users Data, ${error}` });
+  }
+}
+
 /** PUT: http://localhost:5001/api/updateuser 
  * @param: {
   "header" : "<token>"
@@ -217,15 +237,16 @@ body: {
 }
 */
 export async function updateUser(req, res) {
+  console.log(req)
   try {
     // const id = req.query.id;
-    const { userId } = req.user;
+    const { _id } = req.body;
 
-    if (userId) {
+    if (_id) {
       const body = req.body;
 
       // update the data
-      User.updateOne({ _id: userId }, body, function (err, data) {
+      User.updateOne({ _id: _id }, body, function (err, data) {
         if (err) throw err;
 
         return res.status(201).send({ msg: "Record Updated...!" });
@@ -249,7 +270,6 @@ export async function updateUser(req, res) {
  * @param {*} res 
  */
 export async function generateOTP(req, res) {
-  console.log("REQ:",req.body)
   req.app.locals.OTP = await otpGenerator.generate(6, {
     lowerCaseAlphabets: false,
     upperCaseAlphabets: false,
