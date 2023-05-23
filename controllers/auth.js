@@ -154,8 +154,11 @@ export async function login(req, res) {
                 user_type,
                 kra_brs_number,
                 role,
+<<<<<<< HEAD
                 county_id,
                 ministry
+=======
+>>>>>>> dd41544324a5e1ec6ef7dff4f50d09e9d1f19836
               },
               process.env.JWT_SECRET,
               { expiresIn: "24h" }
@@ -182,6 +185,10 @@ export async function login(req, res) {
 /** GET: http://localhost:5001/api/user/example123 */
 export async function getUser(req, res) {
   const { email } = req.params;
+<<<<<<< HEAD
+=======
+  console.log(email);
+>>>>>>> dd41544324a5e1ec6ef7dff4f50d09e9d1f19836
 
   try {
     if (!email) return res.status(501).send({ error: "Invalid email" });
@@ -202,6 +209,7 @@ export async function getUser(req, res) {
   }
 }
 
+<<<<<<< HEAD
 /** GET: http://localhost:5001/api/users */
 export async function getUsers(req, res) {
   try {
@@ -221,6 +229,8 @@ export async function getUsers(req, res) {
   }
 }
 
+=======
+>>>>>>> dd41544324a5e1ec6ef7dff4f50d09e9d1f19836
 /** PUT: http://localhost:5001/api/updateuser 
  * @param: {
   "header" : "<token>"
@@ -237,6 +247,7 @@ body: {
 }
 */
 export async function updateUser(req, res) {
+<<<<<<< HEAD
   console.log(req)
   try {
     // const id = req.query.id;
@@ -247,6 +258,17 @@ export async function updateUser(req, res) {
 
       // update the data
       User.updateOne({ _id: _id }, body, function (err, data) {
+=======
+  try {
+    // const id = req.query.id;
+    const { userId } = req.user;
+
+    if (userId) {
+      const body = req.body;
+
+      // update the data
+      User.updateOne({ _id: userId }, body, function (err, data) {
+>>>>>>> dd41544324a5e1ec6ef7dff4f50d09e9d1f19836
         if (err) throw err;
 
         return res.status(201).send({ msg: "Record Updated...!" });
@@ -270,6 +292,10 @@ export async function updateUser(req, res) {
  * @param {*} res 
  */
 export async function generateOTP(req, res) {
+<<<<<<< HEAD
+=======
+  console.log("REQ:",req.body)
+>>>>>>> dd41544324a5e1ec6ef7dff4f50d09e9d1f19836
   req.app.locals.OTP = await otpGenerator.generate(6, {
     lowerCaseAlphabets: false,
     upperCaseAlphabets: false,

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 export const data = [
+=======
+const data = [
+>>>>>>> dd41544324a5e1ec6ef7dff4f50d09e9d1f19836
   {
     type: "Feature",
     properties: {
