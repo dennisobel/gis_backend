@@ -5,6 +5,8 @@ import otpGenerator from "otp-generator";
 import OTP from "../models/OTP.js";
 import { sendSms } from "./mailer.js";
 
+import Building from "../models/Building.js";
+
 /** middleware for verify user */
 export async function verifyUser(req, res, next) {
   try {
@@ -45,7 +47,7 @@ export const signup = async (req, res) => {
       kra_brs_number,
       role,
       county_id,
-      ministry
+      ministry,
     } = req.body;
 
     // check for existing email
@@ -84,14 +86,16 @@ export const signup = async (req, res) => {
                 kra_brs_number,
                 role,
                 county_id,
-                ministry
+                ministry,
               });
 
               // return save result as a response
               user
                 .save()
                 .then((result) =>
-                  res.status(201).send({ msg: "User Register Successfully", result })
+                  res
+                    .status(201)
+                    .send({ msg: "User Register Successfully", result })
                 )
                 .catch((error) => res.status(500).send({ error }));
             })
@@ -140,7 +144,8 @@ export async function login(req, res) {
               kra_brs_number,
               role,
               county_id,
-              ministry
+              ministry,
+              ward
             } = user;
 
             // create jwt token
@@ -155,7 +160,8 @@ export async function login(req, res) {
                 kra_brs_number,
                 role,
                 county_id,
-                ministry
+                ministry,
+                ward
               },
               process.env.JWT_SECRET,
               { expiresIn: "24h" }
@@ -237,7 +243,7 @@ body: {
 }
 */
 export async function updateUser(req, res) {
-  console.log(req)
+  console.log(req);
   try {
     // const id = req.query.id;
     const { _id } = req.body;
@@ -264,32 +270,34 @@ export async function updateUser(req, res) {
   "msisdn" : "254711111111",
 
 }
-*//**
- * 
- * @param {*} req 
- * @param {*} res 
+*/ /**
+ *
+ * @param {*} req
+ * @param {*} res
  */
 export async function generateOTP(req, res) {
   req.app.locals.OTP = await otpGenerator.generate(6, {
     lowerCaseAlphabets: false,
     upperCaseAlphabets: false,
     specialChars: false,
-  });  
+  });
 
-  const { msisdn } = req.body; 
-  let now = new Date(Date.now())
-  let expiry = new Date(now).setMinutes(now.getMinutes() + 10)
-  const code = req.app.locals.OTP
-  try{
-    const otp = new OTP({msisdn: msisdn, code: code, expiry : expiry })
-    otp.save()
-    await sendSms({msisdn: msisdn, text: `Your OTP is ${code}. The code expires in 10 minutes`})
-    res.status(201).send({ status: 0, message: 'OTP Sent to phone number' });
+  const { msisdn } = req.body;
+  let now = new Date(Date.now());
+  let expiry = new Date(now).setMinutes(now.getMinutes() + 10);
+  const code = req.app.locals.OTP;
+  try {
+    const otp = new OTP({ msisdn: msisdn, code: code, expiry: expiry });
+    otp.save();
+    await sendSms({
+      msisdn: msisdn,
+      text: `Your OTP is ${code}. The code expires in 10 minutes`,
+    });
+    res.status(201).send({ status: 0, message: "OTP Sent to phone number" });
   } catch (error) {
-    console.log(error)
-    res.status(501).send({ status: 1, message: "Error sending otp"})
+    console.log(error);
+    res.status(501).send({ status: 1, message: "Error sending otp" });
   }
-  
 }
 
 /** GET: http://localhost:5001/api/verifyOTP ?msisdn=254711111111&code=xxxxxx*/
@@ -300,31 +308,29 @@ export async function verifyOTP(req, res) {
     const otp = await OTP.findOne({ msisdn }).sort({ createdAt: -1 });
 
     if (!otp) {
-
       res.status(400).send({ error: "Invalid OTP" });
     }
 
-    if (otp.verified){
+    if (otp.verified) {
       res.status(400).send({ error: "OTP has already been verified" });
     }
 
     const currentTimestamp = Date.now(); // Get the current timestamp in seconds
 
     if (currentTimestamp > otp.expiry) {
-
       res.status(400).send({ error: "OTP Has Expired" });
     } else {
-      if (otp.code == code){
+      if (otp.code == code) {
         otp.verified = true; // Mark the OTP as verified
-        await otp.save(); 
-        res.status(201).send({message: "OTP Verified successfully"})
+        await otp.save();
+        res.status(201).send({ message: "OTP Verified successfully" });
       } else {
-        res.status(400).send({ error: "Invalid OTP. Use the last OTP received" });
+        res
+          .status(400)
+          .send({ error: "Invalid OTP. Use the last OTP received" });
       }
-      
     }
   } catch (error) {
-
     res.status(400).send({ error: "Unable to verify OTP" });
   }
 }
@@ -379,3 +385,57 @@ export async function resetPassword(req, res) {
     return res.status(401).send({ error });
   }
 }
+
+// function to get ward summary i.e number of businesses with each payment status
+// sample response: 
+// {
+//   "summary": {
+//     "Paid": 136,
+//     "NotPaid": 112,
+//     "PartiallyPaid": 99
+//   }
+// }
+
+export const getBusinessesByPaymentStatus = async (req, res) => {
+  // const { wardName } = req.params;
+
+  const user = req.user;
+
+  if (!user.ward) {
+    res.status(404).json({ error: "User is not assigned a ward" });
+  } else {
+    const wardName = user.ward;
+
+    try {
+      const buildings = await Building.find({ ward: wardName }).populate(
+        "singleBusinessPermits"
+      );
+
+      const businessesByPaymentStatus = {
+        Paid: 0,
+        NotPaid: 0,
+        PartiallyPaid: 0,
+      };
+
+      buildings.forEach((building) => {
+        building.singleBusinessPermits.forEach((permit) => {
+          const { payment_status } = permit;
+          if (payment_status === "Paid") {
+            businessesByPaymentStatus.Paid++;
+          } else if (payment_status === "Not Paid") {
+            businessesByPaymentStatus.NotPaid++;
+          } else if (payment_status === "Partially Paid") {
+            businessesByPaymentStatus.PartiallyPaid++;
+          }
+        });
+      });
+
+      res.json({ summary: businessesByPaymentStatus });
+    } catch (error) {
+      console.log(error)
+      res
+        .status(500)
+        .json({ error: "Failed to fetch businesses by payment status" });
+    }
+  }
+};

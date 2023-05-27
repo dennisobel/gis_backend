@@ -93,3 +93,53 @@ export const sendSms = async (msisdn, text) => {
     }
 
 }
+
+// For sending emails
+// POST http://localhost:5001/user/send-mail
+// sample body: 
+// {
+//   "to": "email@onfonmedia.com",
+//   "email_body": "This is a test using the API"
+// }
+export const sendMail = async (req, res) => {
+    const user = req.user
+    
+    const reply_to = user.email
+    const { to, email_body } = req.body
+    const subject = `Message from ${user.name}`
+
+    res.status(200).json({message: 'Email Sent'})
+
+    await sendEmailWithReplyTo(user.email, to, subject, email_body, reply_to)
+}
+
+async function sendEmailWithReplyTo(from, to, subject, text, replyTo) {
+    // Create a SMTP transporter
+    let transporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: process.env.MAIL_PORT,
+      secure: true, // Set it to true if you're using a secure connection (e.g., SSL/TLS)
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASSWORD
+      }
+    });
+  
+    // Set up email data
+    let mailOptions = {
+      from: from,
+      to: to,
+      subject: subject,
+      text: text,
+      replyTo: replyTo
+    };
+  
+    try {
+      // Send the email
+      let info = await transporter.sendMail(mailOptions);
+      console.log('Email sent: ' + info.response);
+    } catch (error) {
+      console.error('Error sending email:', error);
+    }
+  }
+  

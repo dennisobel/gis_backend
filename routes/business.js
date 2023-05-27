@@ -5,6 +5,7 @@ import {
   getBusinessById,
   updateBusiness,
   deleteBusiness,
+  changePaymentStatus
 } from "../controllers/business.js";
 
 const router = express.Router();
@@ -12,6 +13,8 @@ const router = express.Router();
 router.post("/register", createBusiness);
 router.get("/businesses", getAllBusinesses);
 router.get("/business/:id", getBusinessById);
+// app.put('/update/:id/payment-status', checkAdminOrOfficer, changePaymentStatus);
+router.put('/update/:id/payment-status', changePaymentStatus);
 router.put("/update/:id", updateBusiness);
 router.delete("/delete:/id", deleteBusiness);
 
