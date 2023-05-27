@@ -109,5 +109,6 @@ connect()
     }
   })
   .catch((error) => {
+    console.log(error)
     console.log("Invalid database connection...!");
   });
