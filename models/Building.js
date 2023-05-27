@@ -1,4 +1,5 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
+import mongoosePaginate from 'mongoose-paginate-v2'
 
 const BuildingSchema = new mongoose.Schema(
   {
@@ -15,12 +16,18 @@ const BuildingSchema = new mongoose.Schema(
     ward: String,
     longitude: String,
     latitude: String,
-    
+    singleBusinessPermits: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'SingleBusinessPermit',
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
 
+BuildingSchema.plugin(mongoosePaginate);
 const Building = mongoose.model("Building", BuildingSchema);
 export default Building;
