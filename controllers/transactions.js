@@ -3,12 +3,7 @@ import Transaction from "../models/Transaction.js";
 
 // Gets paginated list of transactions. Result same as buildings result
 export const getTransactions = async (req, res) => {
-  // try {
-  //   const transactions = await Transaction.find();
-  //   res.status(200).json(transactions);
-  // } catch (error) {
-  //   res.status(500).json({ error: error.message });
-  // }
+  console.log('REQ:',req.query)
   const {
     page = 1,
     limit = 10,
@@ -25,13 +20,6 @@ export const getTransactions = async (req, res) => {
   };
 
   const searchFilter = {};
-
-  // if (building_number) {
-  //   searchFilter.building_number = { $regex: building_number };
-  // }
-  // if (ward) {
-  //   searchFilter.ward = { $regex: ward, $options: "i" };
-  // }
 
   try {
     const transactions = await Transaction.paginate(searchFilter, options);

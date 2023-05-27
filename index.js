@@ -10,12 +10,9 @@ import generalRoutes from "./routes/general.js";
 import managementRoutes from "./routes/management.js";
 import salesRoutes from "./routes/sales.js";
 import authRoutes from "./routes/auth.js"
-import userRoutes from "./routes/users.js"
 import businessRoutes from "./routes/business.js"
 import countyRoutes from "./routes/county.js"
-import buildingsRoutes from "./routes/building.js"
-import transactionsRoutes from "./routes/transactions.js"
-import wardRoutes from "./routes/wards.js"
+import buildingRoutes from "./routes/buildings.js"
 
 // data imports
 import User from "./models/User.js";
@@ -37,11 +34,9 @@ import {
 } from "./data/index.js";
 import connect from "./database/conn.js";
 
-
 /**CONFIGURATION */
 dotenv.config();
-const app = express();  
-
+const app = express();
 app.use(express.json());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
@@ -55,12 +50,9 @@ app.use("/general", generalRoutes);
 app.use("/management", managementRoutes);
 app.use("/sales", salesRoutes);
 app.use("/auth", authRoutes)
-app.use("/user", userRoutes)
 app.use("/business", businessRoutes)
 app.use("/county",countyRoutes)
-app.use("/buildings",buildingsRoutes)
-app.use("/transactions",transactionsRoutes)
-app.use("/wards",wardRoutes)
+app.use("/buildings",buildingRoutes)
 
 /**MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;

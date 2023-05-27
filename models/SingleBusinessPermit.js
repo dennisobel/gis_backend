@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import mongoosePaginate from 'mongoose-paginate-v2'
 
 const SingleBusinessPermitSchema = new mongoose.Schema({
   application_type: String,
@@ -82,7 +81,6 @@ const SingleBusinessPermitSchema = new mongoose.Schema({
   building: { type: Schema.Types.ObjectId, ref: 'Building' },
 });
 
-SingleBusinessPermitSchema.plugin(mongoosePaginate);
 const SingleBusinessPermit = mongoose.model('SingleBusinessPermit', SingleBusinessPermitSchema);
 
 export default SingleBusinessPermit;
