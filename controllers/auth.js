@@ -227,6 +227,21 @@ export async function getUsers(req, res) {
   }
 }
 
+/** GET: http://localhost:5001/api/officers */
+export async function getOfficers(req, res) {
+  const {county,role} = req.params
+  try {
+    User.find({county_id:county,role}, {password:0}, function (err, users) {
+      if (err) return res.status(500).send({ err });
+      if (!users || users.length === 0)
+        return res.status(501).send({ error: "Couldn't Find the Users" });
+      return res.status(201).send(users);
+    });
+  } catch (error) {
+    return res.status(404).send({ error: `Cannot Find Users Data, ${error}` });
+  }
+}
+
 /** PUT: http://localhost:5001/api/updateuser 
  * @param: {
   "header" : "<token>"
