@@ -72,6 +72,7 @@ export const getBuildings = async (req, res) => {
     limit = 10,
     building_number,
     ward,
+    county,
     // sortField = "createdAt",
     // sortOrder = "desc",
   } = req.query;
@@ -91,6 +92,10 @@ export const getBuildings = async (req, res) => {
   }
   if (ward){
     searchFilter.ward = { $regex: ward, $options: "i" }
+  }
+
+  if (county){
+    searchFilter.county = { $regex: county, $options: "i" }
   }
 
   try {
@@ -115,3 +120,22 @@ export const getBuildingById = async (req, res) => {
   }
 };
 
+
+
+export const getAllCountyBuildings = async (req, res) => {
+  
+  try {
+    const county = req.params.county;
+    console.log("Getting buildings for", county)
+    const buildings = await Building.find({ county }, { latitude: 1, longitude: 1 }).select('_id');
+    
+    if (buildings.length === 0) {
+      res.status(404).json({ message: 'No buildings found for the specified county.' });
+      return;
+    }
+
+    res.status(200).json(buildings);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
