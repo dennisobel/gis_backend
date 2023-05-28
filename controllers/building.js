@@ -4,7 +4,7 @@ import Building from "../models/Building.js";
 // http://localhost:5001/buildings?limit=3&page=1
 // http://localhost:5001/buildings
 // http://localhost:5001/buildings?ward=<ward name>
-// sample response: 
+// sample response:
 
 // {
 //   "docs": [
@@ -77,38 +77,6 @@ export const createBuilding = async (req, res) => {
   }
 };
 
-// Read all buildings
-export const getAllBuildings = async (req, res) => {
-  try {
-    const buildings = await Building.find();
-    res.status(200).json(buildings);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-// Read all county buildings
-export const getAllCountyBuildings = async (req, res) => {
-  const county = req.params.county;
-  try {
-    const buildings = await Building.aggregate([
-      { $match: { county } },
-      {
-        $lookup: {
-          from: "singlebusinesspermits",
-          localField: "_id",
-          foreignField: "building",
-          as: "singleBusinessPermits",
-        },
-      },
-    ]);
-
-    res.status(200).json(buildings);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
 export const getBuildings = async (req, res) => {
   const {
     page = 1,
@@ -133,12 +101,12 @@ export const getBuildings = async (req, res) => {
   if (building_number) {
     searchFilter.building_number = { $regex: building_number };
   }
-  if (ward){
-    searchFilter.ward = { $regex: ward, $options: "i" }
+  if (ward) {
+    searchFilter.ward = { $regex: ward, $options: "i" };
   }
 
-  if (county){
-    searchFilter.county = { $regex: county, $options: "i" }
+  if (county) {
+    searchFilter.county = { $regex: county, $options: "i" };
   }
 
   try {
@@ -153,7 +121,9 @@ export const getBuildings = async (req, res) => {
 export const getBuildingById = async (req, res) => {
   const { id } = req.params;
   try {
-    const building = await Building.findById(id).populate('singleBusinessPermits');
+    const building = await Building.findById(id).populate(
+      "singleBusinessPermits"
+    );
     if (!building) {
       return res.status(404).json({ message: "Building not found" });
     }
@@ -163,22 +133,27 @@ export const getBuildingById = async (req, res) => {
   }
 };
 
-
-
-
 export const getAllCountyBuildings = async (req, res) => {
-  
   try {
     const county = req.params.county;
-    console.log("Getting buildings for", county)
-    const buildings = await Building.find({ county }, { latitude: 1, longitude: 1 }).select('_id');
-    
+    console.log("Getting buildings for", county);
+    const buildings = await Building.find(
+      { county },
+      { latitude: 1, longitude: 1 }
+    ).select("_id");
+
     if (buildings.length === 0) {
-      res.status(404).json({ message: 'No buildings found for the specified county.' });
+      res
+        .status(404)
+        .json({ message: "No buildings found for the specified county." });
       return;
     }
 
     res.status(200).json(buildings);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
 // Update a building
 export const updateBuildingById = async (req, res) => {
@@ -208,9 +183,7 @@ export const deleteBuildingById = async (req, res) => {
       return res.status(404).json({ error: "Building not found" });
     }
     res.status(200).json({ message: "Building deleted successfully" });
-
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
-
