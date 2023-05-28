@@ -283,6 +283,10 @@ export async function generateOTP(req, res) {
   });
 
   const { msisdn } = req.body;
+  if (!msisdn){
+    return res.status(400).json({error: 'Missing Critical Data'})
+
+  }
   let now = new Date(Date.now());
   let expiry = new Date(now).setMinutes(now.getMinutes() + 10);
   const code = req.app.locals.OTP;
@@ -293,10 +297,10 @@ export async function generateOTP(req, res) {
       msisdn: msisdn,
       text: `Your OTP is ${code}. The code expires in 10 minutes`,
     });
-    res.status(201).send({ status: 0, message: "OTP Sent to phone number" });
+    return res.status(201).send({ status: 0, message: "OTP Sent to phone number" });
   } catch (error) {
     console.log(error);
-    res.status(501).send({ status: 1, message: "Error sending otp" });
+    return res.status(501).send({ status: 1, message: "Error sending otp" });
   }
 }
 
@@ -308,30 +312,30 @@ export async function verifyOTP(req, res) {
     const otp = await OTP.findOne({ msisdn }).sort({ createdAt: -1 });
 
     if (!otp) {
-      res.status(400).send({ error: "Invalid OTP" });
+      return res.status(400).send({ error: "Invalid OTP" });
     }
 
     if (otp.verified) {
-      res.status(400).send({ error: "OTP has already been verified" });
+      return res.status(400).send({ error: "OTP has already been verified" });
     }
 
     const currentTimestamp = Date.now(); // Get the current timestamp in seconds
 
     if (currentTimestamp > otp.expiry) {
-      res.status(400).send({ error: "OTP Has Expired" });
+      return res.status(400).send({ error: "OTP Has Expired" });
     } else {
       if (otp.code == code) {
         otp.verified = true; // Mark the OTP as verified
         await otp.save();
-        res.status(201).send({ message: "OTP Verified successfully" });
+        return res.status(201).send({ message: "OTP Verified successfully" });
       } else {
-        res
+        return res
           .status(400)
           .send({ error: "Invalid OTP. Use the last OTP received" });
       }
     }
   } catch (error) {
-    res.status(400).send({ error: "Unable to verify OTP" });
+    return res.status(400).send({ error: "Unable to verify OTP" });
   }
 }
 
@@ -402,7 +406,7 @@ export const getBusinessesByPaymentStatus = async (req, res) => {
   const user = req.user;
 
   if (!user.ward) {
-    res.status(404).json({ error: "User is not assigned a ward" });
+    return res.status(404).json({ error: "User is not assigned a ward" });
   } else {
     const wardName = user.ward;
 

@@ -5,18 +5,18 @@ export const createCounty = async (req, res) => {
     const countyData = req.body;
     const county = new County(countyData);
     const newCounty = await county.save();
-    res.status(201).json(newCounty);
+    return res.status(201).json(newCounty);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
 export const getAllCounties = async (req, res) => {
   try {
     const counties = await County.find();
-    res.status(200).json(counties);
+    return res.status(200).json(counties);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -27,9 +27,9 @@ export const getCountyById = async (req, res) => {
     if (!county) {
       return res.status(404).json({ error: "County not found" });
     }
-    res.status(200).json(county);
+    return res.status(200).json(county);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -45,9 +45,9 @@ export const updateCountyById = async (req, res) => {
     if (!updatedCounty) {
       return res.status(404).json({ error: "County not found" });
     }
-    res.status(200).json(updatedCounty);
+    return res.status(200).json(updatedCounty);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -58,9 +58,9 @@ export const deleteCountyById = async (req, res) => {
     if (!deletedCounty) {
       return res.status(404).json({ error: "County not found" });
     }
-    res.status(200).json({ message: "County deleted successfully" });
+    return res.status(200).json({ message: "County deleted successfully" });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 

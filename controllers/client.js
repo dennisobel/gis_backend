@@ -20,18 +20,18 @@ export const getProducts = async (req, res) => {
       })
     );
 
-    res.status(200).json(productsWithStats);
+    return res.status(200).json(productsWithStats);
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
 export const getCustomers = async (req, res) => {
   try {
     const customers = await User.find({ role: "user" }).select("-password");
-    res.status(200).json(customers);
+    return res.status(200).json(customers);
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -65,12 +65,12 @@ export const getTransactions = async (req, res) => {
       name: { $regex: search, $options: "i" },
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       transactions,
       total,
     });
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -93,8 +93,8 @@ export const getGeography = async (req, res) => {
       }
     );
 
-    res.status(200).json(formattedLocations);
+    return res.status(200).json(formattedLocations);
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };

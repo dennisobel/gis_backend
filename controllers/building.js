@@ -95,10 +95,10 @@ export const getBuildings = async (req, res) => {
 
   try {
     const buildings = await Building.paginate(searchFilter, options);
-    res.status(200).json(buildings);
+    return res.status(200).json(buildings);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -107,12 +107,11 @@ export const getBuildingById = async (req, res) => {
   try {
     const building = await Building.findById(id).populate('singleBusinessPermits');
     if (!building) {
-      res.status(404).json({ message: "Building not found" });
-      return;
+      return res.status(404).json({ message: "Building not found" });
     }
-    res.status(200).json(building);
+    return res.status(200).json(building);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 

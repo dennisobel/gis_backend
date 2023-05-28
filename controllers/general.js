@@ -7,9 +7,9 @@ export const getUser = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findById(id);
-    res.status(200).json(user);
+    return res.status(200).json(user);
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -44,7 +44,7 @@ export const getDashboardStats = async (req, res) => {
       return date === currentDay;
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       totalCustomers,
       yearlyTotalSoldUnits,
       yearlySalesTotal,
@@ -55,7 +55,7 @@ export const getDashboardStats = async (req, res) => {
       transactions,
     });
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -95,7 +95,7 @@ export const getSummaries = async (req, res) => {
     const oneWeekAgo = new Date(today_date.getFullYear(), today_date.getMonth(), today_date.getDate() - 7);
     const oneYearAgo = new Date(today_date.getFullYear() - 1, today_date.getMonth(), today_date.getDate());
 
-    res.status(200).json({
+    return res.status(200).json({
       summary: {
         transactions: {
           today: await getCount(Transaction, oneDayAgo, today_date), 
@@ -120,7 +120,7 @@ export const getSummaries = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 

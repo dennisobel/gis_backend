@@ -8,9 +8,9 @@ export const createWard = async (req, res) => {
     const wardData = req.body;
     const ward = new Ward(wardData);
     const newWard = await ward.save();
-    res.status(201).json(newWard);
+    return res.status(201).json(newWard);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -18,9 +18,9 @@ export const createWard = async (req, res) => {
 export const getAllWards = async (req, res) => {
   try {
     const wards = await Ward.find().populate("subCounty");
-    res.status(200).json(wards);
+    return res.status(200).json(wards);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -32,9 +32,9 @@ export const getWardById = async (req, res) => {
     if (!ward) {
       return res.status(404).json({ error: "Ward not found" });
     }
-    res.status(200).json(ward);
+    return res.status(200).json(ward);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -49,9 +49,9 @@ export const updateWardById = async (req, res) => {
     if (!updatedWard) {
       return res.status(404).json({ error: "Ward not found" });
     }
-    res.status(200).json(updatedWard);
+    return res.status(200).json(updatedWard);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -63,9 +63,9 @@ export const deleteWardById = async (req, res) => {
     if (!deletedWard) {
       return res.status(404).json({ error: "Ward not found" });
     }
-    res.status(200).json({ message: "Ward deleted successfully" });
+    return res.status(200).json({ message: "Ward deleted successfully" });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -189,9 +189,9 @@ export const getTransactionSummaryForWards = async (req, res) => {
 
     const total = countResult[0] ? countResult[0].count : 0;
 
-    res.status(200).json({ summary, total });
+    return res.status(200).json({ summary, total });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -265,8 +265,8 @@ export const getTransactionSummaryByWard = async (req, res) => {
 
     const summary = await Transaction.aggregate(pipeline).exec();
 
-    res.status(200).json({ summary });
+    return res.status(200).json({ summary });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

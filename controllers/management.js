@@ -33,9 +33,9 @@ export const getAdmins = async (req, res) => {
     const total = await Transaction.countDocuments({
       name: { $regex: search, $options: "i" },
     });
-    res.status(200).json(admins);
+    return res.status(200).json(admins);
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };
 
@@ -44,7 +44,7 @@ export const assignWardToOfficer = async (req, res) => {
   try {
     const ward = await Ward.find({ id: ward_id });
     if (!ward) {
-      res.status(404).json({ error: "Ward Not Found" });
+      return res.status(404).json({ error: "Ward Not Found" });
     }
 
     const officer = await User.find({ email: officer_email })
@@ -98,6 +98,6 @@ export const getUserPerformance = async (req, res) => {
       .status(200)
       .json({ user: userWithStats[0], sales: filteredSaleTransactions });
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.status(404).json({ message: error.message });
   }
 };

@@ -7,10 +7,10 @@ export const createBusiness = async (req, res) => {
     const businessData = req.body;
     const newBusiness = new SingleBusinessPermit(businessData);
     const savedBusiness = await newBusiness.save();
-    res.status(201).json(savedBusiness);
+    return res.status(201).json(savedBusiness);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to create a new business." });
+    return res.status(500).json({ error: "Failed to create a new business." });
   }
 };
 
@@ -43,10 +43,10 @@ export const getAllBusinesses = async (req, res) => {
     );
 
     // const businesses = await SingleBusinessPermit.find();
-    res.status(200).json(businesses);
+    return res.status(200).json(businesses);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to retrieve businesses." });
+    return res.status(500).json({ error: "Failed to retrieve businesses." });
   }
 };
 
@@ -61,7 +61,7 @@ export const getBusinessById = async (req, res) => {
     res.json(business);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to retrieve the business." });
+    return res.status(500).json({ error: "Failed to retrieve the business." });
   }
 };
 
@@ -82,7 +82,7 @@ export const updateBusiness = async (req, res) => {
     res.json(updatedBusiness);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to update the business." });
+    return res.status(500).json({ error: "Failed to update the business." });
   }
 };
 
@@ -99,7 +99,7 @@ export const deleteBusiness = async (req, res) => {
     res.json({ message: "Business deleted successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to delete the business." });
+    return res.status(500).json({ error: "Failed to delete the business." });
   }
 };
 
@@ -111,7 +111,7 @@ export const changePaymentStatus = async (req, res) => {
   const allowedStatuses = ["Paid", "Partially Paid", "Not Paid"];
 
   if (!allowedStatuses.includes(paymentStatus)) {
-    res.status(400).json({ message: "Invalid payment status" });
+    return res.status(400).json({ message: "Invalid payment status" });
     return;
   }
 
@@ -119,7 +119,7 @@ export const changePaymentStatus = async (req, res) => {
     const permit = await SingleBusinessPermit.findById(id);
 
     if (!permit) {
-      res.status(404).json({ message: "Business permit not found" });
+      return res.status(404).json({ message: "Business permit not found" });
       return;
     }
 
@@ -130,6 +130,6 @@ export const changePaymentStatus = async (req, res) => {
       .status(200)
       .json({ message: "Payment status updated successfully", permit });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
