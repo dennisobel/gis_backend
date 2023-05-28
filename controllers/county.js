@@ -21,10 +21,9 @@ export const getAllCounties = async (req, res) => {
 };
 
 export const getCountyById = async (req, res) => {
-  console.log(req.params)
   try {
     const { countyId } = req.params;
-    const county = await County.find({code:countyId});
+    const county = await County.findById(countyId);
     if (!county) {
       return res.status(404).json({ error: "County not found" });
     }

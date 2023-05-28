@@ -2,7 +2,7 @@ import { Router } from "express";
 const router = Router();
 
 /** import all controllers */
-import {signup, verifyUser, login, getUser, getUsers, getOfficers, generateOTP,verifyOTP, createResetSession, resetPassword, updateUser} from '../controllers/auth.js';
+import {signup, verifyUser, login, getUser, getUsers, generateOTP,verifyOTP, createResetSession, resetPassword, updateUser} from '../controllers/auth.js';
 import { registerMail } from '../controllers/mailer.js'
 import Auth, { localVariables } from '../middleware/auth.js';
 
@@ -18,7 +18,6 @@ router.post('/generateOTP', generateOTP)
 /** GET Methods */
 router.get('/user/:email',getUser)
 router.get('/users',getUsers)
-router.get('/officers/:county/:role',getOfficers)
 router.get('/verifyOTP', verifyOTP)
 router.get('/createResetSession',createResetSession)
 
