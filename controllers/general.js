@@ -55,6 +55,7 @@ export const getDashboardStats = async (req, res) => {
       transactions,
     });
   } catch (error) {
+    console.log("ERROR GENERATING STATS", error)
     return res.status(404).json({ message: error.message });
   }
 };
