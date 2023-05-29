@@ -82,6 +82,8 @@ const SingleBusinessPermitSchema = new mongoose.Schema({
   building: { type: Schema.Types.ObjectId, ref: 'Building' },
 });
 
+SingleBusinessPermitSchema.index({ business_category: 1, 'building.street': 'text', 'building.county': 1 });
+
 SingleBusinessPermitSchema.plugin(mongoosePaginate);
 const SingleBusinessPermit = mongoose.model('SingleBusinessPermit', SingleBusinessPermitSchema);
 

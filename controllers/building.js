@@ -1,4 +1,5 @@
 import Building from "../models/Building.js";
+import SingleBusinessPermit from "../models/SingleBusinessPermit.js";
 
 // Get buildings
 // http://localhost:5001/buildings?limit=3&page=1
@@ -133,29 +134,70 @@ export const getBuildingById = async (req, res) => {
   }
 };
 
-export const getAllCountyBuildings = async (req, res) => {
+async function getUniqueBuildingDetails(category, county) {
   try {
-    const county = req.params.county;
-    console.log("Getting buildings for", county);
-    const buildings = await Building.find(
-      { county },
-      { latitude: 1, longitude: 1 }
-    ).select("_id");
+    const buildings = await Building.find({ county }).select('_id');
+    const buildingIds = buildings.map((building) => building._id);
 
-    if (buildings.length === 0) {
-      res
-        .status(404)
-        .json({ message: "No buildings found for the specified county." });
-      return;
-    }
+    const businesses = await SingleBusinessPermit.find({
+      building: { $in: buildingIds },
+      $or: [
+        { business_category: category },
+      ]
+      
+    }).populate('building', '_id longitude latitude');;
 
-    res.status(200).json(buildings);
+    return businesses
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error retrieving SingleBusinessPermits:', error);
+    throw error;
   }
+}
+
+const getUniqueBuildings = async (data) => {
+  const uniqueBuildings = new Map();
+
+  for (const item of data) {
+    const buildingId = item.building._id;
+
+    // Check if the buildingId is already in the Map
+    if (!uniqueBuildings.has(buildingId)) {
+      // If it's not in the Map, add it as a key with the building object as the value
+      uniqueBuildings.set(buildingId, item.building);
+    }
+  }
+
+  // Convert the Map values back to an array
+  const uniqueBuildingList = Array.from(uniqueBuildings.values());
+
+  return uniqueBuildingList;
 };
 
-// Update a building
+
+export const getAllCountyBuildings = async (req, res) => {
+  const county = req.params.county;
+  const businessCategory = req.query.category;
+  
+  try {
+    let buildings = []
+    if (businessCategory){
+      const resp = await getUniqueBuildingDetails(businessCategory, county) 
+      buildings = await getUniqueBuildings(resp)
+    } else {
+      buildings = await Building.find(
+        { county },
+        { latitude: 1, longitude: 1 }
+      ).select("_id");
+    }
+    
+    res.json(buildings)
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  
+  };
+}
+
+// Update a building.
 export const updateBuildingById = async (req, res) => {
   try {
     const { buildingId } = req.params;
