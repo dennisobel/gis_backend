@@ -132,8 +132,7 @@ export const getBuildingById = async (req, res) => {
     }
     if (category){
       const filteredSingleBusinessPermits = building.singleBusinessPermits.filter(
-        (singleBusinessPermit) =>
-          singleBusinessPermit.business_category === category
+        (singleBusinessPermit) => singleBusinessPermit.business_category.toLowerCase() === category.toLowerCase() || singleBusinessPermit.payment_status.toLowerCase() === category.toLowerCase()
       );
       building.singleBusinessPermits = filteredSingleBusinessPermits
     }
@@ -143,18 +142,90 @@ export const getBuildingById = async (req, res) => {
   }
 };
 
-async function getUniqueBuildingDetails(category, county) {
+async function getUniqueBuildingDetailsFiltered(category, county) {
   try {
     const buildings = await Building.find({ county }).select('_id');
     const buildingIds = buildings.map((building) => building._id);
 
-    const businesses = await SingleBusinessPermit.find({
-      building: { $in: buildingIds },
-      $or: [
-        { business_category: category },
-      ]
+    // const businesses = await SingleBusinessPermit.find({
+    //   building: { $in: buildingIds },
+    //   $or: [
+    //     { business_category: category },
+    //     { payment_status: category },
+    //     { 'building.street': category },
+    //   ]
       
-    }).populate('building', '_id longitude latitude');;
+    // }).populate('building', '_id longitude latitude');;
+
+    const businesses = await SingleBusinessPermit.aggregate([
+      {
+        $match: {
+          building: { $in: buildingIds },
+          $or: [
+            { business_category: category },
+            { payment_status: category },
+            { 'building.street': category },
+          ]
+        }
+      },
+      {
+        $group: {
+          _id: '$building',
+          paid_count: {
+            $sum: {
+              $cond: [
+                { $eq: ['$payment_status', 'Paid'] },
+                1,
+                0
+              ]
+            }
+          },
+          partially_paid_count: {
+            $sum: {
+              $cond: [
+                { $eq: ['$payment_status', 'Partially Paid'] },
+                1,
+                0
+              ]
+            }
+          },
+          not_paid: {
+            $sum: {
+              $cond: [
+                { $eq: ['$payment_status', 'Not Paid'] },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: 'buildings',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'building'
+        }
+      },
+      {
+        $unwind: '$building'
+      },
+      {
+        $project: {
+          _id: 0,
+          building: {
+            _id: '$building._id',
+            longitude: '$building.longitude',
+            latitude: '$building.latitude',
+            paid_count: '$paid_count',
+            partially_paid_count: '$partially_paid_count',
+            not_paid: '$not_paid'
+          }
+        }
+      }
+    ]);
+
 
     return businesses
   } catch (error) {
@@ -190,12 +261,12 @@ export const getAllCountyBuildings = async (req, res) => {
   try {
     let buildings = []
     if (businessCategory){
-      const resp = await getUniqueBuildingDetails(businessCategory, county) 
+      const resp = await getUniqueBuildingDetailsFiltered(businessCategory, county) 
       buildings = await getUniqueBuildings(resp)
     } else {
       buildings = await Building.find(
         { county },
-        { latitude: 1, longitude: 1 }
+        { latitude: 1, longitude: 1, paid_count: 1, not_paid_count: 1, partially_paid_count: 1 }
       ).select("_id");
     }
     

@@ -16,6 +16,18 @@ const BuildingSchema = new mongoose.Schema(
     ward: String,
     longitude: String,
     latitude: String,
+    paid_count: {
+      type: Number,
+      required: false,
+    },
+    not_paid_count: {
+      type: Number,
+      required: false,
+    },
+    partially_paid_count: {
+      type: Number,
+      required: false,
+    },
     singleBusinessPermits: [
       {
         type: Schema.Types.ObjectId,
@@ -27,6 +39,8 @@ const BuildingSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+BuildingSchema.index({ county: 1, ward: 1 });
 
 BuildingSchema.plugin(mongoosePaginate);
 const Building = mongoose.model("Building", BuildingSchema);
