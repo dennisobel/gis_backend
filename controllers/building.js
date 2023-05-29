@@ -229,9 +229,9 @@ async function getUniqueBuildingDetailsFiltered(category, county) {
         $match: {
           building: { $in: buildingIds },
           $or: [
-            { business_category: category },
-            { payment_status: category },
-            { 'building.street': category },
+            { business_category: { $regex: category, $options: "i" } },
+            { payment_status: { $regex: category, $options: "i" } },
+            { 'building.street': { $regex: category, $options: "i" } },
           ]
         }
       },
