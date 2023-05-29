@@ -8,7 +8,6 @@ import {
   getBusinessById,
   updateBusiness,
   deleteBusiness,
-  changePaymentStatus,
   getWardBusinesses
 } from "../controllers/business.js";
 
