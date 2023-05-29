@@ -7,9 +7,9 @@ export const createSubCounty = async (req, res) => {
     const subCountyData = req.body;
     const subCounty = new SubCounty(subCountyData);
     const newSubCounty = await subCounty.save();
-    res.status(201).json(newSubCounty);
+    return res.status(201).json(newSubCounty);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -17,9 +17,9 @@ export const createSubCounty = async (req, res) => {
 export const getAllSubCounties = async (req, res) => {
   try {
     const subCounties = await SubCounty.find().populate("county");
-    res.status(200).json(subCounties);
+    return res.status(200).json(subCounties);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -31,9 +31,9 @@ export const getSubCountyById = async (req, res) => {
     if (!subCounty) {
       return res.status(404).json({ error: "SubCounty not found" });
     }
-    res.status(200).json(subCounty);
+    return res.status(200).json(subCounty);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -50,9 +50,9 @@ export const updateSubCountyById = async (req, res) => {
     if (!updatedSubCounty) {
       return res.status(404).json({ error: "SubCounty not found" });
     }
-    res.status(200).json(updatedSubCounty);
+    return res.status(200).json(updatedSubCounty);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -64,9 +64,9 @@ export const deleteSubCountyById = async (req, res) => {
     if (!deletedSubCounty) {
       return res.status(404).json({ error: "SubCounty not found" });
     }
-    res.status(200).json({ message: "SubCounty deleted successfully" });
+    return res.status(200).json({ message: "SubCounty deleted successfully" });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 

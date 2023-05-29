@@ -1,10 +1,11 @@
 import Building from "../models/Building.js";
+import SingleBusinessPermit from "../models/SingleBusinessPermit.js";
 
 // Get buildings
 // http://localhost:5001/buildings?limit=3&page=1
 // http://localhost:5001/buildings
 // http://localhost:5001/buildings?ward=<ward name>
-// sample response: 
+// sample response:
 
 // {
 //   "docs": [
@@ -76,6 +77,7 @@ export const createBuilding = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 // Read all buildings
 export const getAllBuildings = async (req, res) => {
@@ -149,6 +151,7 @@ export const getBuildings = async (req, res) => {
     limit = 10,
     building_number,
     ward,
+    county,
     // sortField = "createdAt",
     // sortOrder = "desc",
   } = req.query;
@@ -166,34 +169,182 @@ export const getBuildings = async (req, res) => {
   if (building_number) {
     searchFilter.building_number = { $regex: building_number };
   }
-  if (ward){
-    searchFilter.ward = { $regex: ward, $options: "i" }
+  if (ward) {
+    searchFilter.ward = { $regex: ward, $options: "i" };
+  }
+
+  if (county) {
+    searchFilter.county = { $regex: county, $options: "i" };
   }
 
   try {
     const buildings = await Building.paginate(searchFilter, options);
-    res.status(200).json(buildings);
+    return res.status(200).json(buildings);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
 export const getBuildingById = async (req, res) => {
   const { id } = req.params;
+  const category = req.query.category;
+
   try {
-    const building = await Building.findById(id).populate('singleBusinessPermits');
+    let building = await Building.findById(id).populate(
+      "singleBusinessPermits"
+    );
     if (!building) {
-      res.status(404).json({ message: "Building not found" });
-      return;
+      return res.status(404).json({ message: "Building not found" });
     }
-    res.status(200).json(building);
+    if (category){
+      const filteredSingleBusinessPermits = building.singleBusinessPermits.filter(
+        (singleBusinessPermit) => singleBusinessPermit.business_category.toLowerCase() === category.toLowerCase() || singleBusinessPermit.payment_status.toLowerCase() === category.toLowerCase()
+      );
+      building.singleBusinessPermits = filteredSingleBusinessPermits
+    }
+    return res.status(200).json(building);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// Update a building
+async function getUniqueBuildingDetailsFiltered(category, county) {
+  try {
+    const buildings = await Building.find({ county }).select('_id');
+    const buildingIds = buildings.map((building) => building._id);
+
+    // const businesses = await SingleBusinessPermit.find({
+    //   building: { $in: buildingIds },
+    //   $or: [
+    //     { business_category: category },
+    //     { payment_status: category },
+    //     { 'building.street': category },
+    //   ]
+      
+    // }).populate('building', '_id longitude latitude');;
+
+    const businesses = await SingleBusinessPermit.aggregate([
+      {
+        $match: {
+          building: { $in: buildingIds },
+          $or: [
+            { business_category: category },
+            { payment_status: category },
+            { 'building.street': category },
+          ]
+        }
+      },
+      {
+        $group: {
+          _id: '$building',
+          paid_count: {
+            $sum: {
+              $cond: [
+                { $eq: ['$payment_status', 'Paid'] },
+                1,
+                0
+              ]
+            }
+          },
+          partially_paid_count: {
+            $sum: {
+              $cond: [
+                { $eq: ['$payment_status', 'Partially Paid'] },
+                1,
+                0
+              ]
+            }
+          },
+          not_paid: {
+            $sum: {
+              $cond: [
+                { $eq: ['$payment_status', 'Not Paid'] },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: 'buildings',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'building'
+        }
+      },
+      {
+        $unwind: '$building'
+      },
+      {
+        $project: {
+          _id: 0,
+          building: {
+            _id: '$building._id',
+            longitude: '$building.longitude',
+            latitude: '$building.latitude',
+            paid_count: '$paid_count',
+            partially_paid_count: '$partially_paid_count',
+            not_paid: '$not_paid'
+          }
+        }
+      }
+    ]);
+
+
+    return businesses
+  } catch (error) {
+    console.error('Error retrieving SingleBusinessPermits:', error);
+    throw error;
+  }
+}
+
+const getUniqueBuildings = async (data) => {
+  const uniqueBuildings = new Map();
+
+  for (const item of data) {
+    const buildingId = item.building._id;
+
+    // Check if the buildingId is already in the Map
+    if (!uniqueBuildings.has(buildingId)) {
+      // If it's not in the Map, add it as a key with the building object as the value
+      uniqueBuildings.set(buildingId, item.building);
+    }
+  }
+
+  // Convert the Map values back to an array
+  const uniqueBuildingList = Array.from(uniqueBuildings.values());
+
+  return uniqueBuildingList;
+};
+
+
+export const getAllCountyBuildings = async (req, res) => {
+  const county = req.params.county;
+  const businessCategory = req.query.category;
+  
+  try {
+    let buildings = []
+    if (businessCategory){
+      const resp = await getUniqueBuildingDetailsFiltered(businessCategory, county) 
+      buildings = await getUniqueBuildings(resp)
+    } else {
+      buildings = await Building.find(
+        { county },
+        { latitude: 1, longitude: 1, paid_count: 1, not_paid_count: 1, partially_paid_count: 1 }
+      ).select("_id");
+    }
+    
+    res.json(buildings)
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  
+  };
+}
+
+// Update a building.
 export const updateBuildingById = async (req, res) => {
   try {
     const { buildingId } = req.params;
@@ -225,4 +376,3 @@ export const deleteBuildingById = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-

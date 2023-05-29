@@ -2,6 +2,7 @@ import express from "express";
 import {
   getAllBuildingBusinesses,
   getAllCountyBusinesses,
+  changePaymentStatus,
   createBusiness,
   getAllBusinesses,
   getBusinessById,

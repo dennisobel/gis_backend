@@ -1,0 +1,33 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn.lock
+
+# FeatherJS
+./.feathers/
+./coverage/
+./docs/
+./dist/
+./.env
+./.env.*.local
+./.env.local
+./.env.development.local
+./.env.test.local
+./.env.production.local
+./*.log
+
+# Editor/IDE
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-workspace
+
+# Dependency directories
+./jspm_packages/
+./bower_components/
+
+# Output files
+*.log
+.DS_Store
+Thumbs.db

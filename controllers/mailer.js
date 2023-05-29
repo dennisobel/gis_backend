@@ -109,7 +109,7 @@ export const sendMail = async (req, res) => {
     const reply_to = from
     const subject = `Message from ${name}`
 
-    res.status(200).json({message: 'Email Sent'})
+    return res.status(200).json({message: 'Email Sent'})
 
     await sendEmailWithReplyTo(from, to, subject, email_body, reply_to)
 }
