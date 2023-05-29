@@ -121,12 +121,21 @@ export const getBuildings = async (req, res) => {
 
 export const getBuildingById = async (req, res) => {
   const { id } = req.params;
+  const category = req.query.category;
+
   try {
-    const building = await Building.findById(id).populate(
+    let building = await Building.findById(id).populate(
       "singleBusinessPermits"
     );
     if (!building) {
       return res.status(404).json({ message: "Building not found" });
+    }
+    if (category){
+      const filteredSingleBusinessPermits = building.singleBusinessPermits.filter(
+        (singleBusinessPermit) =>
+          singleBusinessPermit.business_category === category
+      );
+      building.singleBusinessPermits = filteredSingleBusinessPermits
     }
     return res.status(200).json(building);
   } catch (error) {
