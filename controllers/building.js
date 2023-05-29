@@ -88,7 +88,7 @@ export const getAllBuildings = async (req, res) => {
 };
 
 // Read all county buildings
-export const getAllCountyBuildings = async (req, res) => {
+export const getCountyBuildings = async (req, res) => {
   const county = req.params.county;
   console.log("COUNTY:",county)
   try {
