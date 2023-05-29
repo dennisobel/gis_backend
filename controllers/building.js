@@ -285,9 +285,10 @@ async function getUniqueBuildingDetailsFiltered(category, county) {
             _id: '$building._id',
             longitude: '$building.longitude',
             latitude: '$building.latitude',
-            paid_count: '$paid_count',
-            partially_paid_count: '$partially_paid_count',
-            not_paid: '$not_paid'
+            payment_status: '$building.payment_status',
+            // paid_count: '$paid_count',
+            // partially_paid_count: '$partially_paid_count',
+            // not_paid: '$not_paid'
           }
         }
       }
