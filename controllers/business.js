@@ -95,6 +95,19 @@ export const getAllCountyBusinesses = async (req, res) => {
   }
 };
 
+export const getWardBusinesses = async (req,res) => {
+  try {
+    const {ward} = req.params
+    console.log("WARD:",ward)
+    const businesses = await SingleBusinessPermit.find({ward})
+    res.json(businesses)
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: `Failed to retrieve businesses. ${error}` });
+  }
+
+}
+
 // Retrieve a single business by its ID
 export const getBusinessById = async (req, res) => {
   try {
