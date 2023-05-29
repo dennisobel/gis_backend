@@ -26,7 +26,7 @@ export const getDashboardStats = async (req, res) => {
       .sort({ createdOn: -1 });
 
     /* Overall Stats */
-    const overallStat = await OverallStat.find({ year: currentYear });
+    const overallStat = await OverallStat.find();
 
     const {
       totalCustomers,
