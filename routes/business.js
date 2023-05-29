@@ -16,7 +16,7 @@ const router = express.Router();
 router.post("/register", createBusiness);
 router.get("/businesses", getAllBusinesses);
 router.get("/businesses/:id", getAllBuildingBusinesses);
-router.get("/businesses/:county", getAllCountyBusinesses);
+router.get("/county-businesses/:county", getAllCountyBusinesses);
 router.get("/businesses/ward/:ward", getWardBusinesses);
 router.get("/business/:id", getBusinessById);
 // app.put('/update/:id/payment-status', checkAdminOrOfficer, changePaymentStatus);

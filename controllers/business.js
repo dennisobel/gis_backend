@@ -69,7 +69,7 @@ export const getAllCountyBusinesses = async (req, res) => {
       ],
     })
       .populate({
-        path: "buildings",
+        path: "building",
         match: { county: county },
       })
       .sort(sortFormatted)
