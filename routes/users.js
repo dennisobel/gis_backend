@@ -10,6 +10,6 @@ import { sendMail } from "../controllers/mailer.js";
 
 /** POST Methods */
 router.get("/payment-summary", Auth, getBusinessesByPaymentStatus);
-router.post('/send-mail', Auth, sendMail)
+router.post('/send-mail', sendMail)
 
 export default router;

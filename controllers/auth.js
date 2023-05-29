@@ -36,6 +36,7 @@ export async function verifyUser(req, res, next) {
 
 // Signup controller
 export const signup = async (req, res) => {
+  console.log("inside signup")
   try {
     const {
       name,

@@ -16,8 +16,10 @@ import countyRoutes from "./routes/county.js"
 import buildingsRoutes from "./routes/building.js"
 import transactionsRoutes from "./routes/transactions.js"
 import wardRoutes from "./routes/wards.js"
+import postRoutes from "./routes/posts.js";
 
 // data imports
+import Post from "./models/Post.js";
 import User from "./models/User.js";
 import Product from "./models/Product.js";
 import ProductStat from "./models/ProductStat.js";
@@ -33,7 +35,8 @@ import {
   dataTransaction,
   dataOverallStat,
   dataAffiliateStat,
-  counties
+  counties,
+  posts
 } from "./data/index.js";
 import connect from "./database/conn.js";
 
@@ -61,6 +64,7 @@ app.use("/county",countyRoutes)
 app.use("/buildings",buildingsRoutes)
 app.use("/transactions",transactionsRoutes)
 app.use("/wards",wardRoutes)
+app.use("/posts", postRoutes);
 
 /**MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;
@@ -104,6 +108,7 @@ connect()
       // .then(() => console.log("counties seeded successfully"))
       // .catch(e => console.error(e))
       // seedSubcounties()
+      // Post.insertMany(posts).then(()=>console.log("posts"))
     } catch (error) {
       console.log("Cannot connect to the server");
     }

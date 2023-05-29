@@ -90,6 +90,7 @@ export const getAllBuildings = async (req, res) => {
 // Read all county buildings
 export const getAllCountyBuildings = async (req, res) => {
   const county = req.params.county;
+  console.log("COUNTY:",county)
   try {
     const buildings = await Building.aggregate([
       { $match: { county } },
@@ -102,6 +103,39 @@ export const getAllCountyBuildings = async (req, res) => {
         },
       },
     ]);
+    // const buildings = await Building.find({county}).populate('singleBusinessPermits');
+    if (!buildings) {
+      res.status(404).json({ message: "Buildings not found" });
+      return;
+    }
+
+    res.status(200).json(buildings);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Read all ward buildings
+export const getAllWardBuildings = async (req, res) => {
+  const ward = req.params.ward;
+  console.log("ward:",ward)
+  try {
+    // const buildings = await Building.aggregate([
+    //   { $match: { ward } },
+    //   {
+    //     $lookup: {
+    //       from: "singlebusinesspermits",
+    //       localField: "_id",
+    //       foreignField: "building",
+    //       as: "singleBusinessPermits",
+    //     },
+    //   },
+    // ]);
+    const buildings = await Building.find({ward})
+    if (!buildings) {
+      res.status(404).json({ message: "Buildings not found" });
+      return;
+    }
 
     res.status(200).json(buildings);
   } catch (error) {

@@ -102,15 +102,16 @@ export const sendSms = async (msisdn, text) => {
 //   "email_body": "This is a test using the API"
 // }
 export const sendMail = async (req, res) => {
-    const user = req.user
+    // const user = req.user
     
-    const reply_to = user.email
-    const { to, email_body } = req.body
-    const subject = `Message from ${user.name}`
+    
+    const { to, from, name, email_body } = req.body
+    const reply_to = from
+    const subject = `Message from ${name}`
 
     res.status(200).json({message: 'Email Sent'})
 
-    await sendEmailWithReplyTo(user.email, to, subject, email_body, reply_to)
+    await sendEmailWithReplyTo(from, to, subject, email_body, reply_to)
 }
 
 async function sendEmailWithReplyTo(from, to, subject, text, replyTo) {

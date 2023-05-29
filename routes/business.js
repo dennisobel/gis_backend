@@ -1,18 +1,14 @@
 import express from "express";
 import {
-  createBusiness,
-  getAllBusinesses,
   getAllBuildingBusinesses,
-  getBusinessById,
-  updateBusiness,
-  deleteBusiness,
   getAllCountyBusinesses,
   createBusiness,
   getAllBusinesses,
   getBusinessById,
   updateBusiness,
   deleteBusiness,
-  changePaymentStatus
+  changePaymentStatus,
+  getWardBusinesses
 } from "../controllers/business.js";
 
 const router = express.Router();
@@ -21,6 +17,7 @@ router.post("/register", createBusiness);
 router.get("/businesses", getAllBusinesses);
 router.get("/businesses/:id", getAllBuildingBusinesses);
 router.get("/businesses/:county", getAllCountyBusinesses);
+router.get("/businesses/ward/:ward", getWardBusinesses);
 router.get("/business/:id", getBusinessById);
 // app.put('/update/:id/payment-status', checkAdminOrOfficer, changePaymentStatus);
 router.put('/update/:id/payment-status', changePaymentStatus);
