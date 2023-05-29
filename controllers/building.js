@@ -333,7 +333,7 @@ export const getAllCountyBuildings = async (req, res) => {
     } else {
       buildings = await Building.find(
         { county },
-        { latitude: 1, longitude: 1, paid_count: 1, not_paid_count: 1, partially_paid_count: 1 }
+        { latitude: 1, longitude: 1, payment_status: 1 }
       ).select("_id");
     }
     
