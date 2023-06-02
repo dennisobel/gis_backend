@@ -28,6 +28,10 @@ const BuildingSchema = new mongoose.Schema(
       type: Number,
       required: false,
     },
+    payment_status: {
+      type: String,
+      required: false,
+    },
     singleBusinessPermits: [
       {
         type: Schema.Types.ObjectId,

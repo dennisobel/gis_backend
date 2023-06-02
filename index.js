@@ -17,27 +17,9 @@ import buildingsRoutes from "./routes/building.js"
 import transactionsRoutes from "./routes/transactions.js"
 import wardRoutes from "./routes/wards.js"
 import postRoutes from "./routes/posts.js";
+import categiresRoutes from "./routes/categories.js";
 
-// data imports
-import Post from "./models/Post.js";
-import User from "./models/User.js";
-import Product from "./models/Product.js";
-import ProductStat from "./models/ProductStat.js";
-import Transaction from "./models/Transaction.js";
-import OverallStat from "./models/OverallStat.js";
-import AffiliateStat from "./models/AffiliateStat.js";
-import County from "./models/County.js";
-import SubCounty from "./models/SubCounty.js";
-import {
-  dataUser,
-  dataProduct,
-  dataProductStat,
-  dataTransaction,
-  dataOverallStat,
-  dataAffiliateStat,
-  counties,
-  posts
-} from "./data/index.js";
+
 import connect from "./database/conn.js";
 
 
@@ -65,36 +47,11 @@ app.use("/buildings",buildingsRoutes)
 app.use("/transactions",transactionsRoutes)
 app.use("/wards",wardRoutes)
 app.use("/posts", postRoutes);
+app.use("/categories", categiresRoutes);
 
 /**MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;
 
-// const seedSubcounties = async () => {
-//   try {
-    
-//     const makueniCounty = await County.findOne({ code: "017" }); 
-//     if (!makueniCounty) {
-//       throw new Error("Makueni County not found in the database.");
-//     }
-
-//     const subcountyData = [
-//       { name: "Kilungu", code: "01701", county: makueniCounty._id },
-//       { name: "Mbooni", code: "01702", county: makueniCounty._id },
-//       { name: "Kaiti", code: "01703", county: makueniCounty._id },
-//       { name: "Makueni", code: "01704", county: makueniCounty._id },
-//       { name: "Kibwezi East", code: "01705", county: makueniCounty._id },
-//       { name: "Kibwezi West", code: "01706", county: makueniCounty._id },
-//     ];
-
-//     await SubCounty.deleteMany({}); // Clear existing subcounty data
-//     await SubCounty.insertMany(subcountyData); // Insert new subcounty data
-//     console.log("Subcounty data seeded successfully!");
-//     process.exit(0); // Exit the script
-//   } catch (error) {
-//     console.error("Error seeding subcounty data:", error);
-//     process.exit(1); // Exit with an error
-//   }
-// };
 
 /** start server only when we have valid connection */
 connect()
@@ -104,11 +61,7 @@ connect()
         console.log(`Server connected to http://localhost:${PORT}`);
       });
       // ONLY ADD DATA ONE TIME
-      // County.insertMany(counties)
-      // .then(() => console.log("counties seeded successfully"))
-      // .catch(e => console.error(e))
-      // seedSubcounties()
-      // Post.insertMany(posts).then(()=>console.log("posts"))
+
     } catch (error) {
       console.log("Cannot connect to the server");
     }
