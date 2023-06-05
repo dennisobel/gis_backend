@@ -5,12 +5,16 @@ import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
-  getTransactionsSummary
+  getTransactionsSummary,
+  getDailyTransactions,
+  getMonthlyTransactions,
 } from '../controllers/transactions.js';
 
 const router = express.Router();
 
 router.get('/summary', getTransactionsSummary);
+router.get('/daily', getDailyTransactions)
+router.get('/monthly', getMonthlyTransactions)
 router.get('/', getTransactions);
 router.get('/:id', getTransactionById);
 router.post('/', createTransaction);
