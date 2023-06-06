@@ -3,22 +3,15 @@ import mongoosePaginate from "mongoose-paginate-v2";
 
 const TransactionSchema = new mongoose.Schema(
   {
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: false,
-    },
+    msisdn: String,
     cost: String,
-    products: {
-      type: [mongoose.Types.ObjectId],
-      of: Number,
-      ref: "Product",
-    },
     receipt_no: String,
     store: {
       type: Schema.Types.ObjectId,
       ref: "SingleBusinessPermit",
     },
+    transaction_date: String,
+    request_dump: String,
   },
   { timestamps: true }
 );
