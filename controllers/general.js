@@ -179,11 +179,16 @@ export const sendStkPush = async (req, res) => {
   if (!amount) errors.push("'amount' is a required field");
   if (!msisdn) errors.push("'msisdn' is a required field");
   if (!store_id) errors.push("'store_id' is a required field");
-  const store = await SingleBusinessPermit.find({_id: store_id}).exec().catch((error) => {
-    console.error(error)
-  })
+  const store = await SingleBusinessPermit.find({ _id: store_id })
+    .exec()
+    .catch((error) => {
+      console.error(error);
+    });
 
-  if (!store)errors.push("Not enough permissions to access the store, or no store found")
+  if (!store)
+    errors.push(
+      "Not enough permissions to access the store, or no store found"
+    );
   if (errors.length > 0) return res.status(400).json({ error: errors });
 
   var data = JSON.stringify({
@@ -205,7 +210,7 @@ export const sendStkPush = async (req, res) => {
     .then(function (response) {
       console.log("------------success response------------------");
       console.log(JSON.stringify(response.data));
-      
+
       const newStkWaiting = new StkWaiting({
         msisdn: msisdn,
         amount: amount,
@@ -213,7 +218,14 @@ export const sendStkPush = async (req, res) => {
         fulfilled: false,
       });
 
-      newStkWaiting.save().then((result) => {console.log("saved stk waiting request", result)}).catch((error) => {console.log("error saving request", error)})
+      newStkWaiting
+        .save()
+        .then((result) => {
+          console.log("saved stk waiting request", result);
+        })
+        .catch((error) => {
+          console.log("error saving request", error);
+        });
       res.status(200).json(response.data);
     })
     .catch(function (error) {
@@ -238,32 +250,34 @@ export const handleStkPushCallback = async (req, res) => {
 
     const result = { request_dump: JSON.stringify(data) };
 
-    const { Name, Value } = data.Body.stkCallback.CallbackMetadata.Item;
+    for (const item of data.Body.stkCallback.CallbackMetadata.Item) {
+      const { Name, Value } = item;
 
-    switch (Name) {
-      case "Amount":
-        result.amount = Value;
-        break;
-      case "MpesaReceiptNumber":
-        result.trx_id = Value;
-        break;
-      case "PhoneNumber":
-        result.msisdn = Value;
-        break;
-      case "TransactionDate":
-        result.trx_date = new Date(Value);
-        break;
-      default:
-        break;
+      switch (Name) {
+        case "Amount":
+          result.amount = Value;
+          break;
+        case "MpesaReceiptNumber":
+          result.trx_id = Value;
+          break;
+        case "PhoneNumber":
+          result.msisdn = Value;
+          break;
+        case "TransactionDate":
+          result.trx_date = new Date(Value);
+          break;
+        default:
+          break;
+      }
     }
+
     const stk_waiting = await StkWaiting.findOne({
-      msisdn: result.msidn,
+      msisdn: result.msisdn,
       fulfilled: false,
     })
       .sort({ createdAt: -1 })
       .exec();
 
-    
     if (!stk_waiting) {
       message =
         "UNABLE TO FIND STK_WAITING RECORD FOR THIS TRANSACTION. IGNORING...";
@@ -289,9 +303,11 @@ export const handleStkPushCallback = async (req, res) => {
         });
     }
   } else {
-    console.log("---------------------------------------------- UNSUCCESSFUL STK PUSH -------------------------------------------")
-    console.log(data.Body.stkCallback.ResultDesc)
-    message = data.Body.stkCallback.ResultDesc
+    console.log(
+      "---------------------------------------------- UNSUCCESSFUL STK PUSH -------------------------------------------"
+    );
+    console.log(data.Body.stkCallback.ResultDesc);
+    message = data.Body.stkCallback.ResultDesc;
   }
 
   console.log(data);
