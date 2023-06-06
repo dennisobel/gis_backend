@@ -291,6 +291,8 @@ export const handleStkPushCallback = async (req, res) => {
         store: stk_waiting.store,
         request_dump: result.request_dump,
       });
+      stk_waiting.fulfilled = true
+      stk_waiting.save().catch(() => {})
       new_transaction
         .save()
         .then((result) => {
