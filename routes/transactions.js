@@ -1,4 +1,4 @@
-import express from 'express';
+import express from "express";
 import {
   getTransactions,
   getTransactionById,
@@ -8,17 +8,18 @@ import {
   getTransactionsSummary,
   getDailyTransactions,
   getMonthlyTransactions,
-} from '../controllers/transactions.js';
+} from "../controllers/transactions.js";
+import Auth from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get('/summary', getTransactionsSummary);
-router.get('/daily', getDailyTransactions)
-router.get('/monthly', getMonthlyTransactions)
-router.get('/', getTransactions);
-router.get('/:id', getTransactionById);
-router.post('/', createTransaction);
-router.put('/:id', updateTransaction);
-router.delete('/:id', deleteTransaction);
+router.get("/summary", Auth, getTransactionsSummary);
+router.get("/daily", Auth, getDailyTransactions);
+router.get("/monthly", Auth, getMonthlyTransactions);
+router.get("/", Auth, getTransactions);
+router.get("/:id", Auth, getTransactionById);
+router.post("/", Auth, createTransaction);
+router.put("/:id", Auth, updateTransaction);
+router.delete("/:id", Auth, deleteTransaction);
 
 export default router;

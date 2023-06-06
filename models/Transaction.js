@@ -3,8 +3,9 @@ import mongoosePaginate from "mongoose-paginate-v2";
 
 const TransactionSchema = new mongoose.Schema(
   {
-    userId: {
-      type: String,
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: false,
     },
     cost: String,

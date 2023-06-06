@@ -17,10 +17,7 @@ export const getTransactions = async (req, res) => {
   const options = {
     page: parseInt(page, 10),
     limit: parseInt(limit, 10),
-    populate: {
-      path: "products",
-      model: "Product",
-    },
+    populate: 'user',
   };
 
   const searchFilter = {};

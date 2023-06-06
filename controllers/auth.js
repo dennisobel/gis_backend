@@ -459,3 +459,20 @@ export const getBusinessesByPaymentStatus = async (req, res) => {
     }
   }
 };
+
+
+export const getUserSummary = async (req, res) => {
+  return res.status(200).json({
+    summary: {
+      monthly_ward_balance: 0,
+      quarterly_ward_balance: 0,
+      yearly_ward_balance: 0,
+      yearly_ward_paid: 0,
+      monthly_ward_paid: 0,
+      total_paid: 0,
+      tasks_in_todo: 0, 
+      store_visit: 0,
+      past_store_visits: 0
+    }
+  })
+}
