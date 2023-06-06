@@ -205,16 +205,16 @@ export const sendStkPush = async (req, res) => {
     .then(function (response) {
       console.log("------------success response------------------");
       console.log(JSON.stringify(response.data));
-      res.status(200).json(response.data);
+      
       const newStkWaiting = new StkWaiting({
         msisdn: msisdn,
         amount: amount,
-        store: store._id,
+        store: store[0]._id,
         fulfilled: false,
       });
 
       newStkWaiting.save().then((result) => {console.log("saved stk waiting request", result)}).catch((error) => {console.log("error saving request", error)})
-      
+      res.status(200).json(response.data);
     })
     .catch(function (error) {
       console.log("------------error response------------------");
