@@ -7,6 +7,7 @@ import {
   updateBusiness,
   deleteBusiness,
   getAllCountyBusinesses,
+  escalateBusiness,
   changePaymentStatus
 } from "../controllers/business.js";
 
@@ -21,5 +22,6 @@ router.get("/business/:id", getBusinessById);
 router.put('/update/:id/payment-status', changePaymentStatus);
 router.put("/update/:id", updateBusiness);
 router.delete("/delete:/id", deleteBusiness);
+router.post("/escalation", escalateBusiness)
 
 export default router;

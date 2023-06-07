@@ -1,5 +1,6 @@
 import SingleBusinessPermit from "../models/SingleBusinessPermit.js";
 import Building from "../models/Building.js";
+import Escalation from "../models/Escalation.js";
 
 // Create a new business registration
 export const createBusiness = async (req, res) => {
@@ -41,7 +42,7 @@ export const getAllBuildingBusinesses = async (req, res) => {
 
 /**Get business by county */
 export const getAllCountyBusinesses = async (req, res) => {
-  console.log("in get county business")
+  console.log("in get county business");
   const county = req.params.county;
   const { page = 1, pageSize = 20, sort = null, search = "" } = req.query;
   // formatted sort should look like { userId: -1 }
@@ -56,7 +57,6 @@ export const getAllCountyBusinesses = async (req, res) => {
   const sortFormatted = Boolean(sort) ? generateSort() : {};
 
   try {
-
     const businesses = await SingleBusinessPermit.find({
       $or: [
         { business_name: { $regex: new RegExp(search, "i") } },
@@ -91,22 +91,20 @@ export const getAllCountyBusinesses = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: `Failed to retrieve businesses. ${error}` });
-
   }
 };
 
-export const getWardBusinesses = async (req,res) => {
+export const getWardBusinesses = async (req, res) => {
   try {
-    const {ward} = req.params
-    console.log("WARD:",ward)
-    const businesses = await SingleBusinessPermit.find({ward})
-    res.json(businesses)
+    const { ward } = req.params;
+    console.log("WARD:", ward);
+    const businesses = await SingleBusinessPermit.find({ ward });
+    res.json(businesses);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: `Failed to retrieve businesses. ${error}` });
   }
-
-}
+};
 
 // Retrieve a single business by its ID
 export const getBusinessById = async (req, res) => {
@@ -161,7 +159,6 @@ export const deleteBusiness = async (req, res) => {
   }
 };
 
-
 export const changePaymentStatus = async (req, res) => {
   const { id } = req.params;
   const { paymentStatus } = req.body;
@@ -190,4 +187,55 @@ export const changePaymentStatus = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
+};
+
+export const escalateBusiness = async (req, res) => {
+  const { store_id, reason, escalate } = req.body;
+
+  const store = await SingleBusinessPermit.findById(store_id);
+  if (!store) {
+    return res
+      .status(404)
+      .json({
+        message: "You have no permission to view this store or store not found",
+      });
+  }
+  console.log("STORE :: ", store)
+
+  store.escalated = escalate;
+  store.save().catch((error) => {
+    console.log("Error saving escalation", error);
+  });
+
+  if (escalate) {
+    const escalation = new Escalation({
+      store: store._id,
+      escalated_by: req.user,
+      reason: reason,
+      attended_to: false,
+    });
+    escalation
+      .save()
+      .then((result) => {
+        console.log("Created Escalation ");
+
+        return res.status(200).json({message: 'Business Escalation successful'})
+      })
+      .catch((error) => {
+        console.log("Error", error);
+      });
+  } else {
+    try{
+      const esc = await Escalation.findOne({ store: store._id })
+      .sort({ createdAt: -1 })
+      .exec();
+      esc.attended_to = true
+      esc.save().catch(()=> {console.log("Unable to update escalation status")})
+      return res.status(200).json({message: 'Business Escalation Resolved successfully'})
+    }catch(error){
+      console.error(error)
+    }
+    
+  }
+  res.status(200).json({message: 'Escalation status unknown'})
 };
