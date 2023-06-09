@@ -3,6 +3,7 @@ import Image from "../models/Image.js";
 import Escalation from "../models/Escalation.js";
 import fs from "fs";
 import RootPath from "app-root-path";
+import Transaction from "../models/Transaction.js";
 
 // Create a new business registration
 export const createBusiness = async (req, res) => {
@@ -249,34 +250,66 @@ export const uploadBusinessImage = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded." });
   }
-  const { store_id } = req.body;
+  const { category, description } = req.body;
 
-  const image = new Image({ path: req.file.path });
+  const image = new Image({ path: req.file.path, description: description });
   await image.save().catch((error) => {
     console.log(error);
     return res.status(500).send("Unable to save image");
   });
 
-  const store = await SingleBusinessPermit.findById(store_id);
-  if (!store) {
-    return res
-      .status(400)
-      .json({ error: "Store not found, or no permission to access store" });
-  }
-
-  store.image = image._id;
-  await store
-    .save()
-    .catch((error) => {
-      console.log(error);
-      return res.status(400).json({ error: "Unable to save image to store" });
-    })
-    .then((result) => {
-      console.log("Updated store with the image", result);
+  if (category === "building") {
+    const { store_id } = req.body;
+    const store = await SingleBusinessPermit.findById(store_id);
+    if (!store) {
       return res
-        .status(200)
-        .json({ message: "Store image saved successfully" });
-    });
+        .status(400)
+        .json({ error: "Store not found, or no permission to access store" });
+    }
+
+    store.image = image._id;
+    await store
+      .save()
+      .catch((error) => {
+        console.log(error);
+        return res.status(400).json({ error: "Unable to save image to store" });
+      })
+      .then((result) => {
+        console.log("Updated store with the image", result);
+        return res
+          .status(200)
+          .json({ message: "Store image saved successfully" });
+      });
+  } else if (category === "payment") {
+    const { transaction_id } = req.body;
+    const transaction = await Transaction.findById(transaction_id);
+    if (!transaction) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Transaction not found, or no permission to access transaction",
+        });
+    }
+    transaction.receipts.push(image._id);
+    transaction.verified = true;
+    await transaction
+      .save()
+      .catch((error) => {
+        console.log(error);
+        return res
+          .status(400)
+          .json({ error: "Unable to save receipt to transaction" });
+      })
+      .then((result) => {
+        console.log("Added receipt to the transaction", result);
+        return res
+          .status(200)
+          .json({ message: "Transaction image saved successfully" });
+      });
+  } else {
+    return res.status(400).json({ error: "'category' field not found. " });
+  }
 };
 
 export const getImage = async (req, res) => {
@@ -328,19 +361,18 @@ export const verifyBusiness = async (req, res) => {
 
   store.verified = verified;
   store.verified_by = req.user._id;
-  await store.save()
-  .then((result) => {
-    console.log(result);
-    return res
-      .status(200)
-      .json({
+  await store
+    .save()
+    .then((result) => {
+      console.log(result);
+      return res.status(200).json({
         message: `Store marked as ${verified ? "verified" : "unverified"} by ${
           req.user.name
         }`,
       });
-  })
-  .catch((error) => {
-    console.log(error)
-    return res.status(500).json({error: "Error when verifying business"})
-  });
+    })
+    .catch((error) => {
+      console.log(error);
+      return res.status(500).json({ error: "Error when verifying business" });
+    });
 };
