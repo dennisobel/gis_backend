@@ -1,6 +1,8 @@
 import SingleBusinessPermit from "../models/SingleBusinessPermit.js";
-import Building from "../models/Building.js";
+import Image from "../models/Image.js";
 import Escalation from "../models/Escalation.js";
+import fs from "fs";
+import RootPath from "app-root-path";
 
 // Create a new business registration
 export const createBusiness = async (req, res) => {
@@ -194,13 +196,11 @@ export const escalateBusiness = async (req, res) => {
 
   const store = await SingleBusinessPermit.findById(store_id);
   if (!store) {
-    return res
-      .status(404)
-      .json({
-        message: "You have no permission to view this store or store not found",
-      });
+    return res.status(404).json({
+      message: "You have no permission to view this store or store not found",
+    });
   }
-  console.log("STORE :: ", store)
+  console.log("STORE :: ", store);
 
   store.escalated = escalate;
   store.save().catch((error) => {
@@ -219,23 +219,128 @@ export const escalateBusiness = async (req, res) => {
       .then((result) => {
         console.log("Created Escalation ");
 
-        return res.status(200).json({message: 'Business Escalation successful'})
+        return res
+          .status(200)
+          .json({ message: "Business Escalation successful" });
       })
       .catch((error) => {
         console.log("Error", error);
       });
   } else {
-    try{
+    try {
       const esc = await Escalation.findOne({ store: store._id })
-      .sort({ createdAt: -1 })
-      .exec();
-      esc.attended_to = true
-      esc.save().catch(()=> {console.log("Unable to update escalation status")})
-      return res.status(200).json({message: 'Business Escalation Resolved successfully'})
-    }catch(error){
-      console.error(error)
+        .sort({ createdAt: -1 })
+        .exec();
+      esc.attended_to = true;
+      esc.save().catch(() => {
+        console.log("Unable to update escalation status");
+      });
+      return res
+        .status(200)
+        .json({ message: "Business Escalation Resolved successfully" });
+    } catch (error) {
+      console.error(error);
     }
-    
   }
-  res.status(200).json({message: 'Escalation status unknown'})
+  res.status(200).json({ message: "Escalation status unknown" });
+};
+
+export const uploadBusinessImage = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded." });
+  }
+  const { store_id } = req.body;
+
+  const image = new Image({ path: req.file.path });
+  await image.save().catch((error) => {
+    console.log(error);
+    return res.status(500).send("Unable to save image");
+  });
+
+  const store = await SingleBusinessPermit.findById(store_id);
+  if (!store) {
+    return res
+      .status(400)
+      .json({ error: "Store not found, or no permission to access store" });
+  }
+
+  store.image = image._id;
+  await store
+    .save()
+    .catch((error) => {
+      console.log(error);
+      return res.status(400).json({ error: "Unable to save image to store" });
+    })
+    .then((result) => {
+      console.log("Updated store with the image", result);
+      return res
+        .status(200)
+        .json({ message: "Store image saved successfully" });
+    });
+};
+
+export const getImage = async (req, res) => {
+  const { id } = req.params; // Extract the image ID from the request parameters
+
+  try {
+    // Find the image by ID
+    const image = await Image.findById(id);
+
+    if (!image) {
+      return res.status(404).send("Image not found.");
+    }
+
+    // Read the image file
+    const imagePath = `${RootPath}/${image.path}`;
+    fs.readFile(imagePath, (err, data) => {
+      if (err) {
+        console.error(err);
+
+        return res.status(500).send("Failed to read image file.");
+      }
+
+      // Set the appropriate content type header
+      res.setHeader("Content-Type", "image/jpeg");
+
+      // Send the image data
+      res.send(data);
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to retrieve image.");
+  }
+};
+
+export const verifyBusiness = async (req, res) => {
+  const { store_id, verified } = req.body;
+
+  if (!store_id)
+    return res.status(400).json({ error: "'store_id' field is mandatory" });
+  if (verified === undefined)
+    return res.status(400).json({ error: "'verified' field is mandatory" });
+
+  const store = await SingleBusinessPermit.findById(store_id);
+  if (!store) {
+    return res
+      .status(400)
+      .json({ error: "Store not found, or no permission to access store" });
+  }
+
+  store.verified = verified;
+  store.verified_by = req.user._id;
+  await store.save()
+  .then((result) => {
+    console.log(result);
+    return res
+      .status(200)
+      .json({
+        message: `Store marked as ${verified ? "verified" : "unverified"} by ${
+          req.user.name
+        }`,
+      });
+  })
+  .catch((error) => {
+    console.log(error)
+    return res.status(500).json({error: "Error when verifying business"})
+  });
 };

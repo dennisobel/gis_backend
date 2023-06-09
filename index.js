@@ -21,6 +21,7 @@ import categiresRoutes from "./routes/categories.js";
 
 
 import connect from "./database/conn.js";
+import Auth from "./middleware/auth.js";
 
 
 /**CONFIGURATION */
@@ -41,7 +42,7 @@ app.use("/management", managementRoutes);
 app.use("/sales", salesRoutes);
 app.use("/auth", authRoutes)
 app.use("/user", userRoutes)
-app.use("/business", businessRoutes)
+app.use("/business", Auth, businessRoutes)
 app.use("/county",countyRoutes)
 app.use("/buildings",buildingsRoutes)
 app.use("/transactions",transactionsRoutes)

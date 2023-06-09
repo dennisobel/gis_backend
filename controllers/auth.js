@@ -136,6 +136,7 @@ export async function login(req, res) {
               return res.status(400).send({ error: "Don't have Password" });
 
             const {
+              _id,
               name,
               email,
               password,
@@ -152,6 +153,7 @@ export async function login(req, res) {
             // create jwt token
             const token = jwt.sign(
               {
+                _id,
                 name,
                 email,
                 password,

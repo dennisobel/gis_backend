@@ -8,8 +8,12 @@ import {
   deleteBusiness,
   getAllCountyBusinesses,
   escalateBusiness,
-  changePaymentStatus
+  changePaymentStatus,
+  uploadBusinessImage,
+  getImage,
+  verifyBusiness
 } from "../controllers/business.js";
+import { upload } from "./helpers.js";
 
 const router = express.Router();
 
@@ -23,5 +27,8 @@ router.put('/update/:id/payment-status', changePaymentStatus);
 router.put("/update/:id", updateBusiness);
 router.delete("/delete:/id", deleteBusiness);
 router.post("/escalation", escalateBusiness)
+router.post("/upload", upload.single('image'), uploadBusinessImage)
+router.get("/image/:id", getImage)
+router.post("/verify", verifyBusiness)
 
 export default router;

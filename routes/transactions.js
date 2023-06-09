@@ -8,6 +8,7 @@ import {
   getTransactionsSummary,
   getDailyTransactions,
   getMonthlyTransactions,
+  verifyTransaction,
 } from "../controllers/transactions.js";
 import Auth from "../middleware/auth.js";
 
@@ -21,5 +22,6 @@ router.get("/:id", Auth, getTransactionById);
 router.post("/", Auth, createTransaction);
 router.put("/:id", Auth, updateTransaction);
 router.delete("/:id", Auth, deleteTransaction);
+router.post("/verify", Auth, verifyTransaction);
 
 export default router;

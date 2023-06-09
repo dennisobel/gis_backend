@@ -423,3 +423,14 @@ export const getMonthlyTransactions = async (req, res) => {
     res.status(200).json(result);
   });
 };
+
+export const verifyTransaction = async (req, res) => {
+  const { store, receipt_no } = req.body;
+
+  const transaction = await Transaction.findOne({store, receipt_no})
+  if (!transaction) {
+    return res.status(400).json({error: 'Transaction does not exist'})
+  }
+  return res.status(200).json({message: 'Transaction verified successfully'})
+
+};
