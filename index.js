@@ -22,6 +22,8 @@ import categiresRoutes from "./routes/categories.js";
 
 import connect from "./database/conn.js";
 import Auth from "./middleware/auth.js";
+import {checkHeaderMiddleware} from "./middleware/check_location.js";
+import {event_it} from "./middleware/event_it.js";
 
 
 /**CONFIGURATION */
@@ -30,6 +32,9 @@ const app = express();
 
 app.use(express.json());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(checkHeaderMiddleware)
+app.use(event_it)
+
 app.use(morgan("common"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));

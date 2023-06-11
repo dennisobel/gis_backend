@@ -4,6 +4,7 @@ import Escalation from "../models/Escalation.js";
 import fs from "fs";
 import RootPath from "app-root-path";
 import Transaction from "../models/Transaction.js";
+import {isBuildingWithinNMeters} from "../middleware/check_location.js";
 
 // Create a new business registration
 export const createBusiness = async (req, res) => {
@@ -352,11 +353,15 @@ export const verifyBusiness = async (req, res) => {
   if (verified === undefined)
     return res.status(400).json({ error: "'verified' field is mandatory" });
 
-  const store = await SingleBusinessPermit.findById(store_id);
+  const store = await SingleBusinessPermit.findById(store_id).populate('building');
   if (!store) {
     return res
       .status(400)
       .json({ error: "Store not found, or no permission to access store" });
+  }
+  const isNear = await isBuildingWithinNMeters(store.building.location, req.coordinates)
+  if (!isNear){
+    return res.status(400).json({error: 'You can only edit a store while you are in it. '})
   }
 
   store.verified = verified;

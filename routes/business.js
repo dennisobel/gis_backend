@@ -14,6 +14,7 @@ import {
   verifyBusiness
 } from "../controllers/business.js";
 import { upload } from "./helpers.js";
+import {require_location} from "../middleware/check_location.js";
 
 const router = express.Router();
 
@@ -29,6 +30,6 @@ router.delete("/delete:/id", deleteBusiness);
 router.post("/escalation", escalateBusiness)
 router.post("/upload", upload.single('image'), uploadBusinessImage)
 router.get("/image/:id", getImage)
-router.post("/verify", verifyBusiness)
+router.post("/verify", require_location, verifyBusiness)
 
 export default router;

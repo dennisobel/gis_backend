@@ -20,6 +20,11 @@ const SingleBusinessPermitSchema = new mongoose.Schema({
     unique: true,
   },
   business_category: String,
+  category: {
+    type: Schema.Types.ObjectId,
+    ref: "SubCategory",
+    required: true,
+  },
   business_sub_category: {
     type: String,
     required: false,
