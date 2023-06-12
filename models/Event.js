@@ -19,7 +19,6 @@ const EventSchema = new mongoose.Schema(
     },
     coordinates: {
       type: LocationSchema,
-      required: true
     },
     store: {
       type: Schema.Types.ObjectId,

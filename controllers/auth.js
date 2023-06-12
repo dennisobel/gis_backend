@@ -6,6 +6,9 @@ import OTP from "../models/OTP.js";
 import { sendSms } from "./mailer.js";
 
 import Building from "../models/Building.js";
+import SingleBusinessPermit from "../models/SingleBusinessPermit.js";
+import Target from "../models/Target.js";
+import { formattedDate, getTotalCollectedInWard } from "../utils/helpers.js";
 
 /** middleware for verify user */
 export async function verifyUser(req, res, next) {
@@ -36,7 +39,7 @@ export async function verifyUser(req, res, next) {
 
 // Signup controller
 export const signup = async (req, res) => {
-  console.log("inside signup")
+  console.log("inside signup");
   try {
     const {
       name,
@@ -147,7 +150,7 @@ export async function login(req, res) {
               role,
               county_id,
               ministry,
-              ward
+              ward,
             } = user;
 
             // create jwt token
@@ -164,7 +167,7 @@ export async function login(req, res) {
                 role,
                 county_id,
                 ministry,
-                ward
+                ward,
               },
               process.env.JWT_SECRET,
               { expiresIn: "24h" }
@@ -232,14 +235,18 @@ export async function getUsers(req, res) {
 
 /** GET: http://localhost:5001/api/officers */
 export async function getOfficers(req, res) {
-  const {county,role} = req.params
+  const { county, role } = req.params;
   try {
-    User.find({county_id:county,role}, {password:0}, function (err, users) {
-      if (err) return res.status(500).send({ err });
-      if (!users || users.length === 0)
-        return res.status(501).send({ error: "Couldn't Find the Users" });
-      return res.status(201).send(users);
-    });
+    User.find(
+      { county_id: county, role },
+      { password: 0 },
+      function (err, users) {
+        if (err) return res.status(500).send({ err });
+        if (!users || users.length === 0)
+          return res.status(501).send({ error: "Couldn't Find the Users" });
+        return res.status(201).send(users);
+      }
+    );
   } catch (error) {
     return res.status(404).send({ error: `Cannot Find Users Data, ${error}` });
   }
@@ -301,9 +308,8 @@ export async function generateOTP(req, res) {
   });
 
   const { msisdn } = req.body;
-  if (!msisdn){
-    return res.status(400).json({error: 'Missing Critical Data'})
-
+  if (!msisdn) {
+    return res.status(400).json({ error: "Missing Critical Data" });
   }
   let now = new Date(Date.now());
   let expiry = new Date(now).setMinutes(now.getMinutes() + 10);
@@ -315,7 +321,9 @@ export async function generateOTP(req, res) {
       msisdn: msisdn,
       text: `Your OTP is ${code}. The code expires in 10 minutes`,
     });
-    return res.status(201).send({ status: 0, message: "OTP Sent to phone number" });
+    return res
+      .status(201)
+      .send({ status: 0, message: "OTP Sent to phone number" });
   } catch (error) {
     console.log(error);
     return res.status(501).send({ status: 1, message: "Error sending otp" });
@@ -409,7 +417,7 @@ export async function resetPassword(req, res) {
 }
 
 // function to get ward summary i.e number of businesses with each payment status
-// sample response: 
+// sample response:
 // {
 //   "summary": {
 //     "Paid": 136,
@@ -454,7 +462,7 @@ export const getBusinessesByPaymentStatus = async (req, res) => {
 
       res.json({ summary: businessesByPaymentStatus });
     } catch (error) {
-      console.log(error)
+      console.log(error);
       res
         .status(500)
         .json({ error: "Failed to fetch businesses by payment status" });
@@ -462,19 +470,42 @@ export const getBusinessesByPaymentStatus = async (req, res) => {
   }
 };
 
-
 export const getUserSummary = async (req, res) => {
+  let target = await Target.findOne({ month: await formattedDate() }).exec();
+  console.log("TARGET THIS MONTH", target);
+  const today_date = new Date();
+  const thisMonth = new Date(
+    today_date.getFullYear(),
+    today_date.getMonth(),
+    1
+  );
+  const thisYear = new Date(today_date.getFullYear(), 0, 1);
+
+  let collected_this_month = await getTotalCollectedInWard(
+    req.user.ward,
+    thisMonth,
+    today_date
+  );
+  let collected_this_year = await getTotalCollectedInWard(
+    req.user.ward,
+    thisYear,
+    today_date
+  );
+  // let collected_total = await getTotalCollectedInWard(req.user.ward, false, today_date);
+  console.log("COLLECTED THIS MONTH: ", collected_this_month);
+  console.log("COLLECTED THIS YEAR: ", collected_this_year);
   return res.status(200).json({
     summary: {
-      monthly_ward_balance: 0,
+      monthly_target: target ? target.amount : 0,
+      monthly_ward_balance: target.amount - collected_this_month,
       quarterly_ward_balance: 0,
       yearly_ward_balance: 0,
-      yearly_ward_paid: 0,
-      monthly_ward_paid: 0,
+      yearly_ward_paid: collected_this_year,
+      monthly_ward_paid: collected_this_month,
       total_paid: 0,
-      tasks_in_todo: 0, 
+      tasks_in_todo: 0,
       store_visit: 0,
-      past_store_visits: 0
-    }
-  })
-}
+      past_store_visits: 0,
+    },
+  });
+};
