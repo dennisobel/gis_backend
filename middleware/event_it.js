@@ -48,39 +48,44 @@ export const event_it = (req, res, next) => {
 export const event_store_activity = async (req, res, next) => {
   res.on("finish", () => {
     if (res.locals.store) {
-      const coordinates = req.coordinates;
-      const storeId = res.locals.store._id;
-      const userId = req.user;
-      const description = req.method;
-      const requestPath = req.path;
-      const requestData = JSON.stringify({
-        query: req.query,
-        data: req.body,
-        params: req.params,
-      });
-      const responseStatus = res.statusCode;
-      const eventType = res.locals.event_type;
-
-      const event = new Event({
-        type: eventType,
-        coordinates: coordinates,
-        store: storeId,
-        user: userId,
-        description: description,
-        request_path: requestPath,
-        request_data: requestData,
-        response_status: responseStatus,
-        error_desc: [200, 201].includes(responseStatus) ? "Successful" : "",
-      });
-
-      event
-        .save()
-        .then((savedEvent) => {
-          console.log("Event saved successfully:", event.type);
-        })
-        .catch((error) => {
-          console.error("Failed to save event:", error);
+      if (!res.locals.event_type) {
+        console.log("Error! Not Event Type Found. not saving event")
+      } else {
+        const coordinates = req.coordinates;
+        const storeId = res.locals.store._id;
+        const userId = req.user;
+        const description = req.method;
+        const requestPath = req.path;
+        const requestData = JSON.stringify({
+          query: req.query,
+          data: req.body,
+          params: req.params,
         });
+        const responseStatus = res.statusCode;
+        const eventType = res.locals.event_type;
+
+        const event = new Event({
+          type: eventType,
+          coordinates: coordinates,
+          store: storeId,
+          user: userId,
+          description: description,
+          request_path: requestPath,
+          request_data: requestData,
+          response_status: responseStatus,
+          error_desc: [200, 201].includes(responseStatus) ? "Successful" : "",
+        });
+
+        event
+          .save()
+          .then((savedEvent) => {
+            console.log("Event saved successfully:", savedEvent.type);
+          })
+          .catch((error) => {
+            console.error("Failed to save event:", error);
+          });
+
+      }
     }
   });
 

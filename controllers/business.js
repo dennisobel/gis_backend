@@ -42,10 +42,10 @@ export const getAllBuildingBusinesses = async (req, res) => {
     const businesses = await SingleBusinessPermit.find({
       building: id,
     });
-    res.json(businesses);
+    return res.json(businesses);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to retrieve businesses." });
+    return res.status(500).json({ error: "Failed to retrieve businesses." });
   }
 };
 
@@ -121,13 +121,13 @@ export const getAllCountyBusinesses = async (req, res) => {
       return business.building !== null; // Filter out businesses without a building reference
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       countyBusinesses,
       total,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: `Failed to retrieve businesses. ${error}` });
+    return res.status(500).json({ error: `Failed to retrieve businesses. ${error}` });
   }
 };
 
@@ -151,7 +151,6 @@ export const getBusinessById = async (req, res) => {
     if (!business) {
       return res.status(404).json({ error: "Business not found." });
     }
-    res.locals.store = business;
     return res.json(business);
   } catch (error) {
     console.error(error);
@@ -207,7 +206,6 @@ export const changePaymentStatus = async (req, res) => {
 
   if (!allowedStatuses.includes(paymentStatus)) {
     return res.status(400).json({ message: "Invalid payment status" });
-    return;
   }
 
   try {
@@ -302,7 +300,6 @@ export const escalateBusiness = async (req, res) => {
       message: "You have no permission to view this store or store not found",
     });
   }
-  res.locals.store = store;
 
   store.escalated = escalate;
   store.save().catch((error) => {
@@ -320,6 +317,8 @@ export const escalateBusiness = async (req, res) => {
       .save()
       .then((result) => {
         console.log("Created Escalation ");
+
+        res.locals.store = store;
         res.locals.event_type = "business_escalation";
 
         return res
@@ -335,13 +334,17 @@ export const escalateBusiness = async (req, res) => {
         .sort({ createdAt: -1 })
         .exec();
       esc.attended_to = true;
-      esc.save().catch(() => {
+      esc.save()
+        .catch(() => {
         console.log("Unable to update escalation status");
-      });
-      res.locals.event_type = "business_deescalation";
-      return res
-        .status(200)
-        .json({ message: "Business Escalation Resolved successfully" });
+      })
+        .then(()=> {
+          res.locals.store = store;
+          res.locals.event_type = "business_deescalation";
+          return res
+            .status(200)
+            .json({ message: "Business Escalation Resolved successfully" });
+            });
     } catch (error) {
       console.error(error);
     }
@@ -369,8 +372,6 @@ export const uploadBusinessImage = async (req, res) => {
         .status(400)
         .json({ error: "Store not found, or no permission to access store" });
     }
-    req.store = store;
-    req.event_type = "business_info_update";
 
     store.image = image._id;
     await store
@@ -381,6 +382,8 @@ export const uploadBusinessImage = async (req, res) => {
       })
       .then((result) => {
         console.log("Updated store with the image", result);
+        req.store = store;
+        req.event_type = "business_info_update";
         return res
           .status(200)
           .json({ message: "Store image saved successfully" });
@@ -405,6 +408,8 @@ export const uploadBusinessImage = async (req, res) => {
       })
       .then((result) => {
         console.log("Added receipt to the transaction", result);
+        req.store = store;
+        req.event_type = "payment_verification";
         return res
           .status(200)
           .json({ message: "Transaction image saved successfully" });
