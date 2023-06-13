@@ -49,7 +49,7 @@ app.use("/auth", authRoutes)
 app.use("/user", userRoutes)
 app.use("/business", Auth, event_store_activity, businessRoutes)
 app.use("/county",countyRoutes)
-app.use("/buildings",buildingsRoutes)
+app.use("/buildings", Auth, buildingsRoutes)
 app.use("/transactions",transactionsRoutes)
 app.use("/wards",wardRoutes)
 app.use("/posts", postRoutes);
