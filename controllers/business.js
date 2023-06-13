@@ -7,6 +7,7 @@ import Transaction from "../models/Transaction.js";
 import { isBuildingWithinNMeters } from "../middleware/check_location.js";
 import { checkinOfficerToStore } from "../utils/helpers.js";
 import County from "../models/County.js";
+import Event from "../models/Event.js";
 
 // Create a new business registration
 export const createBusiness = async (req, res) => {
@@ -491,4 +492,41 @@ export const verifyBusiness = async (req, res) => {
       console.log(error);
       return res.status(500).json({ error: "Error when verifying business" });
     });
+};
+
+
+export const activity_log = async (req, res) => {
+  const { store_id } = req.params;
+
+  console.log("- getting activities for ", store_id);
+  const store = await SingleBusinessPermit.findById(store_id)
+  if (!store){
+    return res.status(400).json({error: 'Store not found or you have no permission to view it'})
+
+  }
+  const { type } = req.query;
+  let typeQuery = [];
+  if (!type) {
+    typeQuery = [
+      "business_registration",
+      "payment_verification",
+      "business_verification",
+      "store_checkin",
+      "business_escalation",
+      "business_deescalation",
+      "business_info_update",
+    ];
+  } else {
+    typeQuery = [type];
+  }
+
+  const logs = await Event.find(
+    { store, type: { $in: typeQuery } },
+    "_id type coordinates"
+  )
+    .populate("user", "name")
+    .populate("store", "store_no")
+    .exec();
+
+  return res.status(200).json(logs);
 };

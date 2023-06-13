@@ -12,7 +12,7 @@ import {
   uploadBusinessImage,
   getImage,
   verifyBusiness,
-  getEscalations
+  getEscalations, activity_log
 } from "../controllers/business.js";
 import { upload } from "./helpers.js";
 import {require_location} from "../middleware/check_location.js";
@@ -33,5 +33,6 @@ router.get("/escalations", getEscalations)
 router.post("/upload", upload.single('image'), uploadBusinessImage)
 router.get("/image/:id", getImage)
 router.post("/verify", require_location, verifyBusiness)
+router.get("/activity/:store_id", activity_log)
 
 export default router;
