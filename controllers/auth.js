@@ -472,6 +472,9 @@ export const getBusinessesByPaymentStatus = async (req, res) => {
 
 export const getUserSummary = async (req, res) => {
   let target = await Target.findOne({ month: await formattedDate() }).exec();
+  if (!target){
+    target = {amount: 0}
+  }
   console.log("TARGET THIS MONTH", target);
   const today_date = new Date();
   const thisMonth = new Date(
