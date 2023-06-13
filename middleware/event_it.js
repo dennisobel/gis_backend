@@ -47,9 +47,9 @@ export const event_it = (req, res, next) => {
 
 export const event_store_activity = async (req, res, next) => {
   res.on("finish", () => {
-    if (req.store) {
+    if (res.locals.store) {
       const coordinates = req.coordinates;
-      const storeId = req.store._id;
+      const storeId = req.locals.store._id;
       const userId = req.user;
       const description = req.method;
       const requestPath = req.path;
@@ -59,7 +59,7 @@ export const event_store_activity = async (req, res, next) => {
         params: req.params,
       });
       const responseStatus = res.statusCode;
-      const eventType = req.event_type;
+      const eventType = req.locals.event_type;
 
       const event = new Event({
         type: eventType,

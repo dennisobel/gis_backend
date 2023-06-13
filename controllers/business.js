@@ -14,8 +14,8 @@ export const createBusiness = async (req, res) => {
     const businessData = req.body;
     const newBusiness = new SingleBusinessPermit(businessData);
     const savedBusiness = await newBusiness.save();
-    req.store = savedBusiness;
-    req.event_type = "business_registration";
+    res.locals.store = savedBusiness;
+    res.locals.event_type = "business_registration";
     return res.status(201).json(savedBusiness);
   } catch (error) {
     console.error(error);
@@ -150,8 +150,8 @@ export const getBusinessById = async (req, res) => {
     if (!business) {
       return res.status(404).json({ error: "Business not found." });
     }
-    req.store = business;
-    res.json(business);
+    res.locals.store = business;
+    res.locals.json(business);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Failed to retrieve the business." });
@@ -172,8 +172,8 @@ export const updateBusiness = async (req, res) => {
     if (!updatedBusiness) {
       return res.status(404).json({ error: "Business not found." });
     }
-    req.store = updateBusiness;
-    req.event_type = "business_info_update";
+    res.locals.store = updateBusiness;
+    res.locals.event_type = "business_info_update";
     res.json(updatedBusiness);
   } catch (error) {
     console.error(error);
@@ -215,8 +215,8 @@ export const changePaymentStatus = async (req, res) => {
     if (!permit) {
       return res.status(404).json({ message: "Business permit not found" });
     }
-    req.store = permit;
-    req.event_type = "business_info_update";
+    res.locals.store = permit;
+    res.locals.event_type = "business_info_update";
     permit.payment_status = paymentStatus;
     await permit.save();
 
@@ -301,7 +301,7 @@ export const escalateBusiness = async (req, res) => {
       message: "You have no permission to view this store or store not found",
     });
   }
-  req.store = store;
+  res.locals.store = store;
 
   store.escalated = escalate;
   store.save().catch((error) => {
@@ -319,7 +319,7 @@ export const escalateBusiness = async (req, res) => {
       .save()
       .then((result) => {
         console.log("Created Escalation ");
-        req.event_type = "business_escalation";
+        res.locals.event_type = "business_escalation";
 
         return res
           .status(200)
@@ -337,7 +337,7 @@ export const escalateBusiness = async (req, res) => {
       esc.save().catch(() => {
         console.log("Unable to update escalation status");
       });
-      req.event_type = "business_deescalation";
+      res.locals.event_type = "business_deescalation";
       return res
         .status(200)
         .json({ message: "Business Escalation Resolved successfully" });
@@ -471,8 +471,8 @@ export const verifyBusiness = async (req, res) => {
       .json({ error: "You can only edit a store while you are in it. " });
   }
 
-  req.store = store;
-  req.event_type = "business_verification";
+  res.locals.store = store;
+  res.locals.event_type = "business_verification";
   await checkinOfficerToStore(req, res, undefined);
 
   store.verified = verified;
