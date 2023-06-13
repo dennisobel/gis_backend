@@ -8,7 +8,7 @@ import { sendSms } from "./mailer.js";
 import Building from "../models/Building.js";
 import SingleBusinessPermit from "../models/SingleBusinessPermit.js";
 import Target from "../models/Target.js";
-import { formattedDate, getTotalCollectedInWard } from "../utils/helpers.js";
+import { formattedDate, getOfficerVisitsCount, getTotalCollectedInWard } from "../utils/helpers.js";
 
 /** middleware for verify user */
 export async function verifyUser(req, res, next) {
@@ -491,9 +491,10 @@ export const getUserSummary = async (req, res) => {
     thisYear,
     today_date
   );
+
   // let collected_total = await getTotalCollectedInWard(req.user.ward, false, today_date);
-  console.log("COLLECTED THIS MONTH: ", collected_this_month);
-  console.log("COLLECTED THIS YEAR: ", collected_this_year);
+  // console.log("COLLECTED THIS MONTH: ", collected_this_month);
+  // console.log("COLLECTED THIS YEAR: ", collected_this_year);
   return res.status(200).json({
     summary: {
       monthly_target: target ? target.amount : 0,
@@ -504,7 +505,7 @@ export const getUserSummary = async (req, res) => {
       monthly_ward_paid: collected_this_month,
       total_paid: 0,
       tasks_in_todo: 0,
-      store_visit: 0,
+      store_visit: await getOfficerVisitsCount(req.user),
       past_store_visits: 0,
     },
   });

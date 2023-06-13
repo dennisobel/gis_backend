@@ -23,7 +23,7 @@ import categiresRoutes from "./routes/categories.js";
 import connect from "./database/conn.js";
 import Auth from "./middleware/auth.js";
 import {checkHeaderMiddleware} from "./middleware/check_location.js";
-import {event_it} from "./middleware/event_it.js";
+import {event_it, event_store_activity} from "./middleware/event_it.js";
 
 
 /**CONFIGURATION */
@@ -33,7 +33,7 @@ const app = express();
 app.use(express.json());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(checkHeaderMiddleware)
-app.use(event_it)
+// app.use(event_it)
 
 app.use(morgan("common"));
 app.use(bodyParser.json());
@@ -47,7 +47,7 @@ app.use("/management", managementRoutes);
 app.use("/sales", salesRoutes);
 app.use("/auth", authRoutes)
 app.use("/user", userRoutes)
-app.use("/business", Auth, businessRoutes)
+app.use("/business", Auth, event_store_activity, businessRoutes)
 app.use("/county",countyRoutes)
 app.use("/buildings",buildingsRoutes)
 app.use("/transactions",transactionsRoutes)

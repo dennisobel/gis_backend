@@ -11,7 +11,8 @@ import {
   changePaymentStatus,
   uploadBusinessImage,
   getImage,
-  verifyBusiness
+  verifyBusiness,
+  getEscalations
 } from "../controllers/business.js";
 import { upload } from "./helpers.js";
 import {require_location} from "../middleware/check_location.js";
@@ -28,6 +29,7 @@ router.put('/update/:id/payment-status', changePaymentStatus);
 router.put("/update/:id", updateBusiness);
 router.delete("/delete:/id", deleteBusiness);
 router.post("/escalation", escalateBusiness)
+router.get("/escalations", getEscalations)
 router.post("/upload", upload.single('image'), uploadBusinessImage)
 router.get("/image/:id", getImage)
 router.post("/verify", require_location, verifyBusiness)

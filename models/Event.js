@@ -14,7 +14,8 @@ const EventSchema = new mongoose.Schema(
         "store_checkin",
         "business_escalation",
         "business_deescalation",
-        "activity"
+        "activity",
+        "business_info_update"
       ],
     },
     coordinates: {

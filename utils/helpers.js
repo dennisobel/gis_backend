@@ -135,29 +135,64 @@ export const formattedDate = async () => {
   return month + "-" + year;
 };
 
-
 export const checkinOfficerToStore = async (req, res, next) => {
-  console.log("CHECKING IN OFFICER TO BUILDING...")
-  const { coordinates, user, store } = req
+  console.log("CHECKING IN OFFICER TO BUILDING...");
+  const { coordinates, user, store } = req;
 
-  try{
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  try {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    const checkins = await Event.findOne({dateCreated: {$gte: today}}).exec()
+    const checkins = await Event.findOne({
+      dateCreated: { $gte: today },
+      type: "store_checkin",
+      user: user._id
+    }).exec();
 
-    if (!checkins){
+    if (!checkins) {
       const event = new Event({
         type: "store_checkin",
         coordinates: coordinates,
         store: store,
-        user: user
-      })
+        user: user,
+      });
+
+      event
+        .save()
+        .catch((error) => {
+          console.log("error checking in officer to store", error);
+        })
+        .then(() => {
+          console.log(
+            "OFFICER ",
+            user.email,
+            "CHECKED IN TO STORE ",
+            store.store_no
+          );
+        });
+    } else {
+      console.log("looks like the officer has signed into this store today");
     }
-
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
+};
 
-  next()
-}
+export const getOfficerVisitsCount = async (officer) => {
+  const today_date = new Date();
+  const thisMonth = new Date(
+    today_date.getFullYear(),
+    today_date.getMonth(),
+    1
+  );
+
+  const eventsCount = Event.countDocuments({
+    type: "store_checkin",
+    user: officer._id,
+    dateCreated: {
+      $gte: thisMonth
+    },
+  })
+
+  return eventsCount
+};
