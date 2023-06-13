@@ -152,7 +152,7 @@ export const getBusinessById = async (req, res) => {
       return res.status(404).json({ error: "Business not found." });
     }
     res.locals.store = business;
-    res.locals.json(business);
+    return res.json(business);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Failed to retrieve the business." });
