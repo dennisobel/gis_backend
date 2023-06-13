@@ -6,9 +6,13 @@ import OTP from "../models/OTP.js";
 import { sendSms } from "./mailer.js";
 
 import Building from "../models/Building.js";
-import SingleBusinessPermit from "../models/SingleBusinessPermit.js";
+import Event from "../models/Event.js";
 import Target from "../models/Target.js";
-import { formattedDate, getOfficerVisitsCount, getTotalCollectedInWard } from "../utils/helpers.js";
+import {
+  formattedDate,
+  getOfficerVisitsCount,
+  getTotalCollectedInWard,
+} from "../utils/helpers.js";
 
 /** middleware for verify user */
 export async function verifyUser(req, res, next) {
@@ -24,7 +28,7 @@ export async function verifyUser(req, res, next) {
   }
 }
 
-/** POST: http://localhost:5001/api/register 
+/** POST: http://localhost:5001/api/register
  * @param : {
   "name" : "example123",-
   "password" : "admin123",
@@ -35,7 +39,7 @@ export async function verifyUser(req, res, next) {
   "role": "governor",
   "user_type": "resident"
 }
-*/
+ */
 
 // Signup controller
 export const signup = async (req, res) => {
@@ -118,12 +122,12 @@ export const signup = async (req, res) => {
   }
 };
 
-/** POST: http://localhost:5001/api/login 
+/** POST: http://localhost:5001/api/login
  * @param: {
   "email" : "example123@host.com",
   "password" : "admin123"
 }
-*/
+ */
 
 // Login controller
 export async function login(req, res) {
@@ -252,11 +256,11 @@ export async function getOfficers(req, res) {
   }
 }
 
-/** PUT: http://localhost:5001/api/updateuser 
+/** PUT: http://localhost:5001/api/updateuser
  * @param: {
   "header" : "<token>"
 }
-body: {
+ body: {
     name: "",
     msisdn: "",
     email: "",
@@ -266,7 +270,7 @@ body: {
     user_type: "",
     kra_brs_number: ""
 }
-*/
+ */
 export async function updateUser(req, res) {
   console.log(req);
   try {
@@ -290,12 +294,13 @@ export async function updateUser(req, res) {
   }
 }
 
-/** POST: http://localhost:5001/api/generateOTP 
+/** POST: http://localhost:5001/api/generateOTP
  * @param : {
   "msisdn" : "254711111111",
 
 }
-*/ /**
+ */
+/**
  *
  * @param {*} req
  * @param {*} res
@@ -472,8 +477,8 @@ export const getBusinessesByPaymentStatus = async (req, res) => {
 
 export const getUserSummary = async (req, res) => {
   let target = await Target.findOne({ month: await formattedDate() }).exec();
-  if (!target){
-    target = {amount: 0}
+  if (!target) {
+    target = { amount: 0 };
   }
   console.log("TARGET THIS MONTH", target);
   const today_date = new Date();
@@ -512,4 +517,34 @@ export const getUserSummary = async (req, res) => {
       past_store_visits: 0,
     },
   });
+};
+
+export const activity_log = async (req, res) => {
+  const { user } = req;
+  console.log("- getting activities for ", user);
+  const { type } = req.query;
+  let typeQuery = [];
+  if (!type) {
+    typeQuery = [
+      "business_registration",
+      "payment_verification",
+      "business_verification",
+      "store_checkin",
+      "business_escalation",
+      "business_deescalation",
+      "business_info_update",
+    ];
+  } else {
+    typeQuery = [type];
+  }
+
+  const logs = await Event.find(
+    { user, type: { $in: typeQuery } },
+    "_id type coordinates"
+  )
+    .populate("user", "name")
+    .populate("store", "store_no")
+    .exec();
+
+  return res.status(200).json(logs);
 };
