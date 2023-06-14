@@ -1,3 +1,4 @@
+import Building from "../models/Building.js";
 import Event from "../models/Event.js";
 import SingleBusinessPermit from "../models/SingleBusinessPermit.js";
 import Target from "../models/Target.js";
@@ -196,3 +197,28 @@ export const getOfficerVisitsCount = async (officer) => {
 
   return eventsCount
 };
+
+
+export const getBuildingPaymentStatusCountByWard = async (ward) => {
+  const status = Building.aggregate([
+    { $match: { ward } }, // Filter buildings by the specified ward
+    {
+      $group: {
+        _id: null, // Group all documents together
+        not_paid_total: { $sum: '$not_paid_count' }, // Sum the not_paid_count field
+        paid_total: { $sum: '$paid_count' }, // Sum the paid_count field
+        partially_paid_total: { $sum: '$partially_paid_count' } // Sum the partially_paid_count field
+      }
+    },
+    {
+      $project: {
+        _id: 0, // Exclude the _id field from the result
+        not_paid_total: 1,
+        paid_total: 1,
+        partially_paid_total: 1
+      }
+    }
+  ])
+
+  return status
+}

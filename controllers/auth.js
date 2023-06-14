@@ -10,6 +10,7 @@ import Event from "../models/Event.js";
 import Target from "../models/Target.js";
 import {
   formattedDate,
+  getBuildingPaymentStatusCountByWard,
   getOfficerVisitsCount,
   getTotalCollectedInWard,
 } from "../utils/helpers.js";
@@ -476,7 +477,21 @@ export const getBusinessesByPaymentStatus = async (req, res) => {
 };
 
 export const getUserSummary = async (req, res) => {
-  let target = await Target.findOne({ month: await formattedDate() }).exec();
+  if (!["revenueOfficer", "revenue_officer"].includes(req.user.role)){
+    return res.status(400).json({error: 'unable to get summary for you role'})
+  }
+
+  let payment_status = await getBuildingPaymentStatusCountByWard(req.user.ward)
+  if (payment_status.length === 0){
+    console.log("Unable to fetch payment status for", req.user.ward)
+    payment_status = {}
+    payment_status.not_paid_total = 0
+    payment_status.paid_total = 0
+    payment_status.partially_paid_total = 0
+  }else{
+    payment_status = payment_status[0]
+  }
+  let target = await Target.findOne({ month: await formattedDate(), ward: req.user.ward }).exec();
   if (!target) {
     target = { amount: 0 };
   }
@@ -515,6 +530,9 @@ export const getUserSummary = async (req, res) => {
       tasks_in_todo: 0,
       store_visit: await getOfficerVisitsCount(req.user),
       past_store_visits: 0,
+      paid: payment_status.paid_total,
+      not_paid: payment_status.not_paid_total,
+      partially_paid: payment_status.partially_paid_total
     },
   });
 };
