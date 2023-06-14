@@ -527,7 +527,7 @@ export const activity_log = async (req, res) => {
 
   const logs = await Event.find(
     { store, type: { $in: typeQuery } },
-    "_id type coordinates"
+    "_id type coordinates createdAt"
   )
     .populate("user", "name")
     .populate("store", "store_no")
