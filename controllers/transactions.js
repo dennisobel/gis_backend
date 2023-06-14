@@ -1,5 +1,5 @@
 import Transaction from "../models/Transaction.js";
-
+import { format } from "date-fns";
 // Gets paginated list of transactions. Result same as buildings result
 export const getTransactions = async (req, res) => {
   // try {
@@ -17,7 +17,14 @@ export const getTransactions = async (req, res) => {
   const options = {
     page: parseInt(page, 10),
     limit: parseInt(limit, 10),
-    populate: 'user',
+    populate: {
+      path: "store",
+      select: "building",
+      populate: {
+        path: "building",
+        select: "ward county",
+      },
+    },
   };
 
   const searchFilter = {};
@@ -140,25 +147,78 @@ const getCount = async (Model, startDate, endDate) => {
 };
 
 export const getDailyTransactions = async (req, res) => {
-  console.log("Getting Daily Transactions Stats");
+  const { ward } = req.query;
   const currentDate = new Date();
   let { days } = req.query;
+  const { role } = req.user;
+
   if (!days) {
     console.log("USING DEFAULT DATE SETUP");
     days = 30;
   } else {
     days = parseInt(days);
   }
-  const thirtyDaysAgo = new Date(
-    currentDate.getTime() - days * 24 * 60 * 60 * 1000
-  );
+  const nDaysAgo = new Date(currentDate.getTime() - days * 24 * 60 * 60 * 1000);
+  let filter = {};
 
-  Transaction.aggregate([
-    // Match transactions within the last n days
+  if (["revenue_officer", "revenueOfficer"].includes(role)) {
+    console.log("FILTERING USING WARD TRANSACTIONS ONLY");
+    filter = { "store.building.ward": req.user.ward };
+  } else if (role === "admin" || role === "governor" || role === "director") {
+    if (ward) {
+      console.log("FILTERING USING COUNTY TRANSACTIONS ONLY");
+      filter = { "store.building.ward": ward };
+    } else {
+      console.log("FILTERING USING COUNTY TRANSACTIONS ONLY");
+      filter = { "store.building.county": req.user.county_id };
+    }
+  } else {
+    filter = { msisdn: req.user.msisdn };
+  }
+
+  filter.createdAt = { $gte: nDaysAgo, $lte: currentDate };
+
+  console.log("filter --> ", filter);
+
+  const dateRange = [];
+  for (let i = 1; i <= days; i++) {
+    const date = new Date(nDaysAgo);
+    date.setDate(date.getDate() + i);
+    const dateString = format(date, "yyyy-MM-dd");
+
+    dateRange.push({
+      date: dateString,
+      transactions_sum: 0,
+      transactions_count: 0,
+    });
+  }
+  const trxs = await Transaction.aggregate([
     {
-      $match: {
-        createdAt: { $gte: thirtyDaysAgo, $lte: currentDate },
+      $lookup: {
+        from: "singlebusinesspermits",
+        localField: "store",
+        foreignField: "_id",
+        as: "store",
       },
+    },
+    {
+      $unwind: "$store",
+    },
+    {
+      $lookup: {
+        from: "buildings",
+        localField: "store.building",
+        foreignField: "_id",
+        as: "store.building",
+      },
+    },
+    {
+      $unwind: "$store.building",
+    },
+
+    // Match transactions + within the last n days
+    {
+      $match: filter,
     },
     // Group by date and calculate sum and count
     {
@@ -169,130 +229,31 @@ export const getDailyTransactions = async (req, res) => {
       },
     },
     // Generate the date range for the last n days
-    {
-      $project: {
-        date: { $dateFromString: { dateString: "$_id" } },
-        transactions_sum: 1,
-        transactions_count: 1,
-      },
-    },
-    // Generate the complete date range for the last n days, including missing dates
-    {
-      $group: {
-        _id: null,
-        dates: { $push: "$date" },
-      },
-    },
-    {
-      $project: {
-        dates: {
-          $map: {
-            input: { $range: [0, days] },
-            as: "i",
-            in: {
-              $subtract: [
-                currentDate,
-                { $multiply: ["$$i", 24 * 60 * 60 * 1000] },
-              ],
-            },
-          },
-        },
-      },
-    },
-    {
-      $unwind: "$dates",
-    },
-    // Lookup transactions for each date
-    {
-      $lookup: {
-        from: "transactions",
-        let: {
-          date: { $dateToString: { format: "%Y-%m-%d", date: "$dates" } },
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  {
-                    $eq: [
-                      {
-                        $dateToString: {
-                          format: "%Y-%m-%d",
-                          date: "$createdAt",
-                        },
-                      },
-                      "$$date",
-                    ],
-                  },
-                ],
-              },
-            },
-          },
-        ],
-        as: "matchedTransactions",
-      },
-    },
-    // Calculate sum and count for each date
-    {
-      $project: {
-        date: { $dateToString: { format: "%Y-%m-%d", date: "$dates" } },
-        transactions_sum: {
-          $cond: {
-            if: { $eq: [{ $size: "$matchedTransactions" }, 0] },
-            then: 0,
-            else: {
-              $sum: {
-                $map: {
-                  input: "$matchedTransactions",
-                  as: "transaction",
-                  in: { $toDouble: "$$transaction.cost" },
-                },
-              },
-            },
-          },
-        },
-        transactions_count: {
-          $cond: {
-            if: { $eq: [{ $size: "$matchedTransactions" }, 0] },
-            then: 0,
-            else: { $size: "$matchedTransactions" },
-          },
-        },
-      },
-    },
-    // Sort by date in ascending order
-    {
-      $sort: {
-        date: 1,
-      },
-    },
-    // Project the final result
-    {
-      $project: {
-        _id: 0,
-        date: 1,
-        transactions_sum: 1,
-        transactions_count: 1,
-      },
-    },
-  ]).exec((err, result) => {
-    if (err) {
-      res.status(500).json(err);
-      console.error(err);
-      return;
-    }
+  ]).exec();
+  if (trxs.length == 0) {
+    return res.status(200).json(dateRange);
+  }
 
-    res.status(200).json(result);
-  });
+  console.log("got", trxs.length, "transactions");
+
+  for (const obj of trxs) {
+    const index = dateRange.findIndex((item) => item.date === obj._id);
+    if (index !== -1) {
+      const { transactions_sum, transactions_count } = obj;
+      dateRange[index].transactions_sum = transactions_sum;
+      dateRange[index].transactions_count = transactions_count;
+    }
+  }
+
+  return res.status(200).json(dateRange);
 };
 
 export const getMonthlyTransactions = async (req, res) => {
-  let { months } = req.query
+  let { months } = req.query;
   if (months) {
-    months = parseInt(months)
+    months = parseInt(months);
   } else {
-    months = 12
+    months = 12;
   }
   const currentDate = new Date();
   const sixMonthsAgo = new Date();
@@ -427,10 +388,9 @@ export const getMonthlyTransactions = async (req, res) => {
 export const verifyTransaction = async (req, res) => {
   const { store, receipt_no } = req.body;
 
-  const transaction = await Transaction.findOne({store, receipt_no})
+  const transaction = await Transaction.findOne({ store, receipt_no });
   if (!transaction) {
-    return res.status(400).json({error: 'Transaction does not exist'})
+    return res.status(400).json({ error: "Transaction does not exist" });
   }
-  return res.status(200).json({message: 'Transaction verified successfully'})
-
+  return res.status(200).json({ message: "Transaction verified successfully" });
 };
