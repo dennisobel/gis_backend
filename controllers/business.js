@@ -386,7 +386,7 @@ export const uploadBusinessImage = async (req, res) => {
         req.event_type = "business_info_update";
         return res
           .status(200)
-          .json({ message: "Store image saved successfully" });
+          .json({ message: "Store image saved successfully", url: `/business/image/${image._id}` });
       });
   } else if (category === "payment") {
     const { transaction_id } = req.body;
@@ -412,7 +412,7 @@ export const uploadBusinessImage = async (req, res) => {
         req.event_type = "payment_verification";
         return res
           .status(200)
-          .json({ message: "Transaction image saved successfully" });
+          .json({ message: "Transaction image saved successfully" , url: `/business/image/${image._id}` });
       });
   } else {
     return res.status(400).json({ error: "'category' field not found. " });
