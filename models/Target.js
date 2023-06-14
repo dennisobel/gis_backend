@@ -5,7 +5,6 @@ const targetSchema = mongoose.Schema(
     month: {
       type: String,
       required: true,
-      unique: true,
     },
     officer: {
       type: Schema.Types.ObjectId,
