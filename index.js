@@ -33,7 +33,7 @@ const app = express();
 app.use(express.json());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(checkHeaderMiddleware)
-// app.use(event_it)
+app.use(event_it)
 
 app.use(morgan("common"));
 app.use(bodyParser.json());
