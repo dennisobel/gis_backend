@@ -168,7 +168,7 @@ export const checkinOfficerToStore = async (req, res, next) => {
             "OFFICER ",
             user.email,
             "CHECKED IN TO STORE ",
-            store.store_no
+            store
           );
         });
     } else {
