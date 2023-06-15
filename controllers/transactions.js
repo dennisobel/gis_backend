@@ -1,3 +1,5 @@
+import SingleBusinessPermit from "../models/SingleBusinessPermit.js";
+import mongoose from "mongoose";
 import Transaction from "../models/Transaction.js";
 import { format } from "date-fns";
 // Gets paginated list of transactions. Result same as buildings result
@@ -249,140 +251,111 @@ export const getDailyTransactions = async (req, res) => {
 };
 
 export const getMonthlyTransactions = async (req, res) => {
-  let { months } = req.query;
-  if (months) {
-    months = parseInt(months);
-  } else {
-    months = 12;
-  }
-  const currentDate = new Date();
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(currentDate.getMonth() - 12);
+  const { ward } = req.query;
+  const { role } = req.user;
 
-  Transaction.aggregate([
-    // Match transactions within the last n months
-    {
-      $match: {
-        createdAt: { $gte: sixMonthsAgo, $lte: currentDate },
-      },
-    },
-    // Group by year and month and calculate sum and count
-    {
-      $group: {
-        _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
-        transactions_sum: { $sum: { $toDouble: "$cost" } },
-        transactions_count: { $sum: 1 },
-      },
-    },
-    // Generate the complete month range for the last 6 months, including missing months
-    {
-      $group: {
-        _id: null,
-        months: { $push: "$_id" },
-      },
-    },
-    {
-      $project: {
-        months: {
-          $map: {
-            input: { $range: [0, months] },
-            as: "i",
-            in: {
-              $dateToString: {
-                format: "%Y-%m",
-                date: {
-                  $subtract: [
-                    currentDate,
-                    { $multiply: ["$$i", 30 * 24 * 60 * 60 * 1000] },
-                  ],
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      $unwind: "$months",
-    },
-    // Lookup transactions for each month
-    {
-      $lookup: {
-        from: "transactions",
-        let: { month: "$months" },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  {
-                    $eq: [
-                      {
-                        $dateToString: { format: "%Y-%m", date: "$createdAt" },
-                      },
-                      "$$month",
-                    ],
-                  },
-                ],
-              },
-            },
-          },
-        ],
-        as: "matchedTransactions",
-      },
-    },
-    // Calculate sum and count for each month
-    {
-      $project: {
-        month: "$months",
-        transactions_sum: {
-          $cond: {
-            if: { $eq: [{ $size: "$matchedTransactions" }, 0] },
-            then: 0,
-            else: {
-              $sum: {
-                $map: {
-                  input: "$matchedTransactions",
-                  as: "transaction",
-                  in: { $toDouble: "$$transaction.cost" },
-                },
-              },
-            },
-          },
-        },
-        transactions_count: {
-          $cond: {
-            if: { $eq: [{ $size: "$matchedTransactions" }, 0] },
-            then: 0,
-            else: { $size: "$matchedTransactions" },
-          },
-        },
-      },
-    },
-    // Sort by year and month in ascending order
-    {
-      $sort: {
-        month: 1,
-      },
-    },
-    // Project the final result
-    {
-      $project: {
-        _id: 0,
-        month: 1,
-        transactions_sum: 1,
-        transactions_count: 1,
-      },
-    },
-  ]).exec((err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json(err);
-      return;
+  try {
+    let filter = {};
+    let target = 0;
+    if (["revenue_officer", "revenueOfficer"].includes(role)) {
+      filter = { "store.building.ward": req.user.ward };
+      // target = await getWardTarget(req.user.ward);
+    } else if (role === "admin" || role === "governor" || role === "director") {
+      if (ward) {
+        console.log("FILTERING USING COUNTY TRANSACTIONS ONLY");
+        filter = { "store.building.ward": ward };
+      } else {
+        console.log("FILTERING USING COUNTY TRANSACTIONS ONLY");
+        filter = { "store.building.county": req.user.county_id };
+      }
+    } else {
+      filter = { store: req.user.msisdn };
     }
 
-    res.status(200).json(result);
-  });
+    let { months } = req.query;
+    if (months) {
+      months = parseInt(months);
+    } else {
+      months = 12;
+    }
+    const currentDate = new Date();
+    const nMonthsAgo = new Date();
+    nMonthsAgo.setMonth(currentDate.getMonth() - months);
+
+    const dateRange = [];
+    for (let i = 1; i <= months; i++) {
+      const date = new Date(nMonthsAgo);
+      date.setMonth(date.getMonth() + i);
+      const dateString = format(date, "yyyy-MM");
+
+      dateRange.push({
+        date: dateString,
+        transactions_sum: 0,
+        balance: 0,
+      });
+    }
+
+    filter.createdAt = { $gte: nMonthsAgo };
+
+    console.log("filter: ", filter);
+    console.log("target: ", target);
+
+    const trxs = await Transaction.aggregate([
+      {
+        $lookup: {
+          from: "singlebusinesspermits",
+          localField: "store",
+          foreignField: "_id",
+          as: "store",
+        },
+      },
+      {
+        $unwind: "$store",
+      },
+      {
+        $lookup: {
+          from: "buildings",
+          localField: "store.building",
+          foreignField: "_id",
+          as: "store.building",
+        },
+      },
+      {
+        $unwind: "$store.building",
+      },
+
+      // Match transactions + within the last n days
+      {
+        $match: filter,
+      },
+      // Group by date and calculate sum and count
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          transactions_sum: { $sum: { $toDouble: "$cost" } },
+          transactions_count: { $sum: 1 },
+        },
+      },
+    ]).exec();
+
+    console.log("got", trxs.length, "transactions");
+
+    for (const obj of trxs) {
+      const index = dateRange.findIndex((item) => item.date === obj._id);
+      if (index !== -1) {
+        const { transactions_sum } = obj;
+        dateRange[index].transactions_sum = transactions_sum;
+        // dateRange[index].balance = target > 0 ? target - transactions_sum : 0;
+      }
+    }
+
+    return res.status(200).json(dateRange);
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ error: "An Error Occured When Processing Your Request" });
+  }
 };
 
 export const verifyTransaction = async (req, res) => {
@@ -393,4 +366,150 @@ export const verifyTransaction = async (req, res) => {
     return res.status(400).json({ error: "Transaction does not exist" });
   }
   return res.status(200).json({ message: "Transaction verified successfully" });
+};
+
+export const getMonthlyTransactionsByStore = async (req, res) => {
+  const { store_id } = req.params;
+
+  try {
+    let filter = {};
+    if (store_id) {
+      filter = { store: store_id };
+    }
+
+    let { months } = req.query;
+    if (months) {
+      months = parseInt(months);
+    } else {
+      months = 4;
+    }
+    const currentDate = new Date();
+    const nMonthsAgo = new Date();
+    nMonthsAgo.setMonth(currentDate.getMonth() - months);
+
+    const dateRange = [];
+    for (let i = 1; i <= months; i++) {
+      const date = new Date(nMonthsAgo);
+      date.setMonth(date.getMonth() + i);
+      const dateString = format(date, "yyyy-MM");
+
+      dateRange.push({
+        date: dateString,
+        transactions_sum: 0,
+        balance: 0,
+      });
+    }
+
+    let target = 0;
+    filter.createdAt = { $gte: nMonthsAgo };
+    if (store_id) {
+      target = await SingleBusinessPermit.find({ _id: store_id }).populate(
+        "category",
+        "price"
+      );
+      if (target) {
+        target = target[0].category.price;
+      } else {
+        console.error("No Target Found For Store", store_id);
+      }
+    }
+
+    console.log("filter: ", filter);
+    console.log("target: ", target);
+
+    const trxs = await Transaction.aggregate([
+      {
+        $match: {
+          store: mongoose.Types.ObjectId(store_id),
+          createdAt: {
+            $gte: nMonthsAgo,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m", date: "$createdAt" },
+          },
+          transactions_sum: { $sum: { $toDouble: "$cost" } },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]).exec();
+
+    console.log("got", trxs.length, "transactions");
+
+    for (const obj of trxs) {
+      const index = dateRange.findIndex((item) => item.date === obj._id);
+      if (index !== -1) {
+        const { transactions_sum } = obj;
+        dateRange[index].transactions_sum = transactions_sum;
+        dateRange[index].balance = target > 0 ? target - transactions_sum : 0;
+      }
+    }
+
+    return res.status(200).json(dateRange);
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ error: "An Error Occured When Processing Your Request" });
+  }
+};
+
+export const getWardTarget = async (ward) => {
+  const results = await SingleBusinessPermit.aggregate([
+    {
+      $lookup: {
+        from: "buildings",
+        localField: "building",
+        foreignField: "_id",
+        as: "building",
+      },
+    },
+    {
+      $unwind: '$building'
+    },
+    {
+      $match: {
+        "building.ward": ward,
+      },
+    },
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "categoryInfo",
+      },
+    },
+    {
+      $unwind: "$categoryInfo",
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+        count: { $sum: 1 },
+        categoryPrice: { $first: "$categoryInfo.price" },
+      },
+    },
+    {
+      $sort: { _id: 1 },
+    },
+  ]).exec();
+
+  let cumulativeCount = 0;
+  const targets = results.map((result) => {
+    cumulativeCount += result.count;
+    return {
+      month: result._id,
+      target: cumulativeCount * result.categoryPrice,
+    };
+  });
+
+  // Handle targets
+  console.log(targets);
+  return targets;
 };
