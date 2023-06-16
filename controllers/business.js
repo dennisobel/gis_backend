@@ -467,15 +467,15 @@ export const verifyBusiness = async (req, res) => {
       .status(400)
       .json({ error: "Store not found, or no permission to access store" });
   }
-  const isNear = await isBuildingWithinNMeters(
-    store.building.location,
-    req.coordinates
-  );
-  if (!isNear) {
-    return res
-      .status(400)
-      .json({ error: "You can only edit a store while you are in it. " });
-  }
+  // const isNear = await isBuildingWithinNMeters(
+  //   store.building.location,
+  //   req.coordinates
+  // );
+  // if (!isNear) {
+  //   return res
+  //     .status(400)
+  //     .json({ error: "You can only edit a store while you are in it. " });
+  // }
 
   res.locals.store = store;
   res.locals.event_type = "business_verification";
