@@ -276,7 +276,7 @@ export const getTransactionSummaryByWard = async (req, res) => {
 export const getWardSummariesView = async (req, res) => {
 
   try{
-    const summaries = await WardSummary.find()
+    const summaries = await WardSummary.find().populate('ward', 'name')
     return res.status(200).json(summaries)
 
   }catch(error) {
