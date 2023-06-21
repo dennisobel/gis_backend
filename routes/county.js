@@ -22,6 +22,7 @@ import {
     getWardById,
     updateWardById,
     deleteWardById,
+    getWardSummariesView,
 } from "../controllers/ward.js";
 
 const router = express.Router();
@@ -73,5 +74,7 @@ router.put("/wards/:wardId", updateWardById);
 
 // Delete a ward by ID
 router.delete("/wards/:wardId", deleteWardById);
+
+router.get('/summaries', getWardSummariesView)
 
 export default router;

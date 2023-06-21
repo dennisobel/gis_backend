@@ -476,14 +476,10 @@ export const getBusinessesByPaymentStatus = async (req, res) => {
   }
 };
 
-export const getUserSummary = async (req, res) => {
-  if (!["revenueOfficer", "revenue_officer"].includes(req.user.role)){
-    return res.status(400).json({error: 'unable to get summary for you role'})
-  }
-
-  let payment_status = await getBuildingPaymentStatusCountByWard(req.user.ward)
+export const wardSummary = async (ward) => {
+  let payment_status = await getBuildingPaymentStatusCountByWard(ward)
   if (payment_status.length === 0){
-    console.log("Unable to fetch payment status for", req.user.ward)
+    console.log("Unable to fetch payment status for", ward)
     payment_status = {}
     payment_status.not_paid_total = 0
     payment_status.paid_total = 0
@@ -491,34 +487,33 @@ export const getUserSummary = async (req, res) => {
   }else{
     payment_status = payment_status[0]
   }
-  let target = await Target.findOne({ month: await formattedDate(), ward: req.user.ward }).exec();
+
+  let target = await Target.findOne({ month: await formattedDate(), ward: ward }).exec();
   if (!target) {
     target = { amount: 0 };
   }
-  console.log("TARGET THIS MONTH", target);
+
   const today_date = new Date();
   const thisMonth = new Date(
     today_date.getFullYear(),
     today_date.getMonth(),
     1
   );
+
   const thisYear = new Date(today_date.getFullYear(), 0, 1);
 
   let collected_this_month = await getTotalCollectedInWard(
-    req.user.ward,
+    ward,
     thisMonth,
     today_date
   );
   let collected_this_year = await getTotalCollectedInWard(
-    req.user.ward,
+    ward,
     thisYear,
     today_date
   );
 
-  // let collected_total = await getTotalCollectedInWard(req.user.ward, false, today_date);
-  // console.log("COLLECTED THIS MONTH: ", collected_this_month);
-  // console.log("COLLECTED THIS YEAR: ", collected_this_year);
-  return res.status(200).json({
+  return {
     summary: {
       monthly_target: target ? target.amount : 0,
       monthly_ward_balance: target.amount - collected_this_month,
@@ -528,13 +523,23 @@ export const getUserSummary = async (req, res) => {
       monthly_ward_paid: collected_this_month,
       total_paid: 0,
       tasks_in_todo: 0,
-      store_visit: await getOfficerVisitsCount(req.user),
-      past_store_visits: 0,
       paid: payment_status.paid_total,
       not_paid: payment_status.not_paid_total,
       partially_paid: payment_status.partially_paid_total
     },
-  });
+  }
+}
+
+export const getUserSummary = async (req, res) => {
+  if (!["revenueOfficer", "revenue_officer"].includes(req.user.role)){
+    return res.status(400).json({error: 'unable to get summary for you role'})
+  }
+
+  const summary = await wardSummary(req.user.ward)
+  summary.summary.store_visit = await getOfficerVisitsCount(req.user)
+  summary.summary.past_store_visits = 0
+
+  return res.status(200).json(summary);
 };
 
 export const activity_log = async (req, res) => {
