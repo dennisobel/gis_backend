@@ -1,4 +1,4 @@
-import mongoose, {Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const SubCountySchema = new mongoose.Schema(
   {
@@ -9,10 +9,13 @@ const SubCountySchema = new mongoose.Schema(
       max: 120,
     },
     code: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
-    county: { type: Schema.Types.ObjectId, ref: 'County' }    
+    county: {
+      type: Schema.Types.ObjectId,
+      ref: "County",
+    },
   },
   {
     timestamps: true,

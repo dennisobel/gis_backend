@@ -9,9 +9,10 @@ const WardSchema = new mongoose.Schema(
       max: 120,
     },
     code: {
-      type: String
+      type: String,
+      required: false
     },
-    subCounty: { type: Schema.Types.ObjectId, ref: 'SubCounty' },
+    subCounty: { type: Schema.Types.ObjectId, ref: 'SubCounty', required: false },
   },
   {
     timestamps: true,

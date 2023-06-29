@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Ward from "../models/Ward.js";
 import Transaction from "../models/Transaction.js";
+import WardSummary from "../models/WardSummary.js";
 
 // Create a new ward
 export const createWard = async (req, res) => {
@@ -270,3 +271,15 @@ export const getTransactionSummaryByWard = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+
+export const getWardSummariesView = async (req, res) => {
+
+  try{
+    const summaries = await WardSummary.find().populate('ward', 'name')
+    return res.status(200).json(summaries)
+
+  }catch(error) {
+    return res.status(500).json({error: "Error occured generating summaries"})
+  }
+}
