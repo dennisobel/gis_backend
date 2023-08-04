@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
 import OTP from "../models/OTP.js";
-import { sendSms } from "./mailer.js";
+import { sendSms, sendWhatsappMessage } from "./mailer.js";
 
 import Building from "../models/Building.js";
 import Event from "../models/Event.js";
@@ -323,10 +323,18 @@ export async function generateOTP(req, res) {
   try {
     const otp = new OTP({ msisdn: msisdn, code: code, expiry: expiry });
     otp.save();
-    await sendSms({
-      msisdn: msisdn,
-      text: `Your OTP is ${code}. The code expires in 10 minutes`,
-    });
+    if (process.env.SEND_WHATSAPP_OTP){
+      await sendWhatsappMessage({
+        msisdn: msisdn,
+        text: `Your OTP is *${code}*. The code expires in 10 minutes`,
+      })
+    }else{
+      await sendSms({
+        msisdn: msisdn,
+        text: `Your OTP is ${code}. The code expires in 10 minutes`,
+      });
+    }
+    
     return res
       .status(201)
       .send({ status: 0, message: "OTP Sent to phone number" });

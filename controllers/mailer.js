@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import Mailgen from 'mailgen';
+const querystring = require('querystring');
 
 import axios from 'axios';
 
@@ -85,6 +86,37 @@ export const sendSms = async (msisdn, text) => {
     console.log(`---REQUEST----\n${url} -> ${JSON.stringify(payload)}`);
     try {
     const response = await axios.post(url, payload);
+        console.log("---RESPONSE---");
+        console.log(response.data);
+    } catch (error) {
+        console.error("---ERROR---");
+        console.error(error.response.data);
+    }
+
+}
+
+
+export const sendWhatsappMessage = async (msisdn, text) => {
+    console.log("Text", text)
+    console.log("msisdn", msisdn)
+
+    const url = `${process.env.WHATSAPP_URL}?key=${process.env.WHATSAPP_CLIENT_ID}`;
+
+
+    // Define the JSON payload for the SMS message.
+    const payload = querystring.stringify({
+                message: msisdn.text,
+                id: msisdn.msisdn
+            }
+        );
+    const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    };
+          
+    // Send the SMS message.
+    console.log(`---REQUEST----\n${url} -> ${payload}`);
+    try {
+    const response = await axios.post(url, payload, { headers });
         console.log("---RESPONSE---");
         console.log(response.data);
     } catch (error) {
