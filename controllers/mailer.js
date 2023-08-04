@@ -136,14 +136,12 @@ export const sendV1WhatsappMessage = async (msisdn, text) => {
     // Define the JSON payload for the SMS message.
     const payload = JSON.stringify({
                 text: msisdn.text,
-                chat_id: `${msisdn.msisdn}@c.us`,
-                type: "chat"
+                receiver: msisdn.msisdn,
+                instance: process.env.WHATSAPP_CLIENT_ID
             }
         );
     const headers = {
-        'Content-Type': 'application/json',
-        client_id: process.env.WHATSAPP_CLIENT_ID,
-        'auth-key': process.env.WHATSAPP_AUTH_KEY
+        'Authorization': `Bearer ${process.env.WHATSAPP_BEARER_TOKEN}`,
   
     };
           
