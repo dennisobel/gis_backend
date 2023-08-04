@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 import Mailgen from 'mailgen';
-const querystring = require('querystring');
+import querystring from 'querystring';
 
 import axios from 'axios';
 
