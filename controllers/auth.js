@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
 import OTP from "../models/OTP.js";
-import { sendSms, sendWhatsappMessage } from "./mailer.js";
+import { sendSms, sendV1WhatsappMessage, sendWhatsappMessage } from "./mailer.js";
 
 import Building from "../models/Building.js";
 import Event from "../models/Event.js";
@@ -329,10 +329,18 @@ export async function generateOTP(req, res) {
         text: `Your OTP is ${code}. The code expires in 10 minutes`,
       });
     }else{
-      await sendWhatsappMessage({
-        msisdn: msisdn,
-        text: `Your OTP is *${code}*. The code expires in 10 minutes`,
-      })
+      if (process.env.WHATSAPP_VERSION == '2'){
+        await sendWhatsappMessage({
+          msisdn: msisdn,
+          text: `Your OTP is *${code}*. The code expires in 10 minutes`,
+        })
+      }else{
+        await sendV1WhatsappMessage({
+          msisdn: msisdn,
+          text: `Your OTP is *${code}*. The code expires in 10 minutes`,
+        })
+      }
+      
     }
     
     return res

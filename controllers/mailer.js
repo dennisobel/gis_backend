@@ -126,6 +126,40 @@ export const sendWhatsappMessage = async (msisdn, text) => {
 
 }
 
+export const sendV1WhatsappMessage = async (msisdn, text) => {
+    console.log("Text", text)
+    console.log("msisdn", msisdn)
+
+    const url = process.env.WHATSAPP_URL;
+
+
+    // Define the JSON payload for the SMS message.
+    const payload = JSON.stringify({
+                text: msisdn.text,
+                chat_id: `${msisdn.msisdn}@c.us`,
+                type: "chat"
+            }
+        );
+    const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        client_id: process.env.WHATSAPP_CLIENT_ID,
+        'auth-key': process.env.WHATSAPP_AUTH_KEY
+  
+    };
+          
+    // Send the SMS message.
+    console.log(`---REQUEST----\n${url} -> ${payload}`);
+    try {
+    const response = await axios.post(url, payload, { headers });
+        console.log("---RESPONSE---");
+        console.log(response.data);
+    } catch (error) {
+        console.error("---ERROR---");
+        console.error(error.response.data);
+    }
+
+}
+
 // For sending emails
 // POST http://localhost:5001/user/send-mail
 // sample body: 
