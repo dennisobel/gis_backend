@@ -141,7 +141,7 @@ export const sendV1WhatsappMessage = async (msisdn, text) => {
             }
         );
     const headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
         client_id: process.env.WHATSAPP_CLIENT_ID,
         'auth-key': process.env.WHATSAPP_AUTH_KEY
   
