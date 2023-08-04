@@ -323,7 +323,7 @@ export async function generateOTP(req, res) {
   try {
     const otp = new OTP({ msisdn: msisdn, code: code, expiry: expiry });
     otp.save();
-    if (process.env.SEND_WHATSAPP_OTP){
+    if (process.env.SEND_WHATSAPP_OTP === '1'){
       await sendWhatsappMessage({
         msisdn: msisdn,
         text: `Your OTP is *${code}*. The code expires in 10 minutes`,
