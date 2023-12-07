@@ -33,7 +33,7 @@ const UserSchema = new mongoose.Schema(
     },
     kra_brs_number: {
       type: String,
-      required: true,
+      required: false,
     },
     role: {
       type: String,

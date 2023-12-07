@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import mongoosePaginate from 'mongoose-paginate-v2'
+import LocationSchema from "./Location.js";
 
 const BuildingSchema = new mongoose.Schema(
   {
@@ -16,6 +17,10 @@ const BuildingSchema = new mongoose.Schema(
     ward: String,
     longitude: String,
     latitude: String,
+    location: {
+      type: LocationSchema,
+      required: false,
+    },
     paid_count: {
       type: Number,
       required: false,
@@ -26,6 +31,10 @@ const BuildingSchema = new mongoose.Schema(
     },
     partially_paid_count: {
       type: Number,
+      required: false,
+    },
+    payment_status: {
+      type: String,
       required: false,
     },
     singleBusinessPermits: [

@@ -1,27 +1,38 @@
 import express from "express";
 import {
-  getAllBuildingBusinesses,
-  getAllCountyBusinesses,
-  changePaymentStatus,
   createBusiness,
   getAllBusinesses,
+  getAllBuildingBusinesses,
   getBusinessById,
   updateBusiness,
   deleteBusiness,
-  getWardBusinesses
+  getAllCountyBusinesses,
+  escalateBusiness,
+  changePaymentStatus,
+  uploadBusinessImage,
+  getImage,
+  verifyBusiness,
+  getEscalations, activity_log
 } from "../controllers/business.js";
+import { upload } from "./helpers.js";
+import {require_location} from "../middleware/check_location.js";
 
 const router = express.Router();
 
 router.post("/register", createBusiness);
 router.get("/businesses", getAllBusinesses);
 router.get("/businesses/:id", getAllBuildingBusinesses);
-router.get("/businesses/:county", getAllCountyBusinesses);
-router.get("/businesses/ward/:ward", getWardBusinesses);
+router.get("/county-businesses/:county", getAllCountyBusinesses);
 router.get("/business/:id", getBusinessById);
 // app.put('/update/:id/payment-status', checkAdminOrOfficer, changePaymentStatus);
 router.put('/update/:id/payment-status', changePaymentStatus);
 router.put("/update/:id", updateBusiness);
 router.delete("/delete:/id", deleteBusiness);
+router.post("/escalation", escalateBusiness)
+router.get("/escalations", getEscalations)
+router.post("/upload", upload.single('image'), uploadBusinessImage)
+router.get("/image/:id", getImage)
+router.post("/verify", require_location, verifyBusiness)
+router.get("/activity/:store_id", activity_log)
 
 export default router;
