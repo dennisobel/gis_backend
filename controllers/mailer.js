@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import Mailgen from 'mailgen';
 import querystring from 'querystring';
+import  https from 'https'; 
 
 import axios from 'axios';
 
@@ -127,8 +128,9 @@ export const sendWhatsappMessage = async (msisdn, text) => {
 }
 
 export const sendV1WhatsappMessage = async (msisdn, text) => {
-    console.log("Text", text)
-    console.log("msisdn", msisdn)
+
+    console.log("Text", msisdn.text)
+    console.log("msisdn", msisdn.msisdn)
 
     const url = process.env.WHATSAPP_URL;
 
@@ -139,23 +141,42 @@ export const sendV1WhatsappMessage = async (msisdn, text) => {
                 receiver: msisdn.msisdn,
                 instance: process.env.WHATSAPP_CLIENT_ID
             }
-        
-    const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.WHATSAPP_BEARER_TOKEN}`,
-  
-    };
-          
-    // Send the SMS message.
-    console.log(`---REQUEST----\n${url} -> ${payload}`);
+
+    console.log("obtain token")
     try {
-    const response = await axios.post(url, payload, { headers });
+        const auth_payload = {
+            username: process.env.WHATSAPP_USERNAME,
+            password: process.env.WHATSAPP_PASSWORD
+        }
+        const auth_response = await axios.post(process.env.WHATSAPP_AUTH_URL, auth_payload, { 'Content-Type': 'application/json' });
+        console.log("---RESPONSE---");
+        console.log(auth_response.data);
+        const token = auth_response.data.token
+        
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`, 
+        }
+
+        console.log("sending otp request")
+        const response = await axios.post(url, payload, { headers });
+
         console.log("---RESPONSE---");
         console.log(response.data);
-    } catch (error) {
-        console.error("---ERROR---");
-        console.error(error.response.data);
-    }
+    } 
+    catch (error) {
+            console.error("---ERROR---");
+            console.error(error);
+        }
+          
+    // Send the SMS message.
+    // console.log(`---REQUEST----\n${url} -> ${payload}`);
+    // try {
+    
+    // } catch (error) {
+    //     console.error("---ERROR---");
+    //     console.error(error.response.data);
+    // }
 
 }
 
