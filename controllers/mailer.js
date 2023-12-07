@@ -148,6 +148,8 @@ export const sendV1WhatsappMessage = async (msisdn, text) => {
             username: process.env.WHATSAPP_USERNAME,
             password: process.env.WHATSAPP_PASSWORD
         }
+        console.log('auth payload: ', auth_payload)
+        console.log('auth url: ', process.env.WHATSAPP_AUTH_URL)
         const auth_response = await axios.post(process.env.WHATSAPP_AUTH_URL, auth_payload, { 'Content-Type': 'application/json' });
         console.log("---RESPONSE---");
         console.log(auth_response.data);
